@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "deploy-ultralytics"
+version = "0.1.0"
+description = "Run Ultralytics YOLO models on several accelerators through OAAX"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+dependencies = [
+    "oaax @ git+https://github.com/OAAX-standard/PythonBindings.git@6cbdbb5435c61f86655ce31d12fa0432c23d32f9",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+
+[project.scripts]
+deploy-ultralytics = "deploy_ultralytics.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[dependency-groups]
+dev = ["pytest>=7"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"

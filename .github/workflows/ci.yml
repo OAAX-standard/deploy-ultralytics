@@ -1,0 +1,28 @@
+name: CI
+
+on: push
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+
+      # PythonBindings is a private repository in this organization, and it
+      # references its own submodule over SSH; rewrite both to token-authenticated HTTPS.
+      - name: Authenticate to private repositories
+        env:
+          PYTHONBINDINGS_TOKEN: ${{ secrets.PYTHONBINDINGS_TOKEN }}
+        run: |
+          git config --global url."https://x-access-token:${PYTHONBINDINGS_TOKEN}@github.com/".insteadOf "https://github.com/"
+          git config --global --add url."https://x-access-token:${PYTHONBINDINGS_TOKEN}@github.com/".insteadOf "git@github.com:"
+
+      - name: Install the package
+        run: uv sync --locked
+
+      - name: Run the test suite
+        run: uv run pytest
