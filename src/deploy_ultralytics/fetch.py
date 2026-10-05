@@ -13,8 +13,8 @@ from deploy_ultralytics.target import load_target
 ARTIFACTS_ENV_VAR = "DEPLOY_ULTRALYTICS_ARTIFACTS"
 RUNTIME_FILE_NAME = "libRuntimeLibrary.so"
 
-_ARCHITECTURES = {"x86_64": "x86_64", "amd64": "x86_64", "aarch64": "aarch64", "arm64": "aarch64"}
-_OPERATING_SYSTEMS = {"Linux": "Ubuntu", "Windows": "Windows"}
+RUNTIME_ARCHITECTURE = "x86_64"
+RUNTIME_OPERATING_SYSTEM = "Ubuntu"
 
 
 class FetchError(Exception):
@@ -29,10 +29,12 @@ def fetch_target(target_name, output_dir):
     or a URL laid out the same way. Returns the path of the runtime.
     """
     target = load_target(target_name)
+    if (platform.system(), platform.machine()) != ("Linux", RUNTIME_ARCHITECTURE):
+        raise FetchError("OAAX runtimes are only available for Linux on x86_64")
     store = os.environ.get(ARTIFACTS_ENV_VAR) or target.store_url
     vendor, version = target.vendor, target.version
 
-    runtime_path = f"runtimes/{version}/{vendor}/{_architecture()}/{_operating_system()}/library.tar.gz"
+    runtime_path = f"runtimes/{version}/{vendor}/{RUNTIME_ARCHITECTURE}/{RUNTIME_OPERATING_SYSTEM}/library.tar.gz"
     toolchain_path = f"conversion-toolchain/{version}/{vendor}/oaax-{vendor.lower()}-toolchain.tar"
 
     library = _place_runtime(store, runtime_path, Path(output_dir) / "runtimes" / target_name)
@@ -83,17 +85,3 @@ def _download(store, path):
     destination.flush()
     destination.seek(0)
     return destination
-
-
-def _architecture():
-    machine = platform.machine().lower()
-    if machine not in _ARCHITECTURES:
-        raise FetchError(f"no OAAX runtime for the architecture {machine}")
-    return _ARCHITECTURES[machine]
-
-
-def _operating_system():
-    system = platform.system()
-    if system not in _OPERATING_SYSTEMS:
-        raise FetchError(f"no OAAX runtime for the operating system {system}")
-    return _OPERATING_SYSTEMS[system]
