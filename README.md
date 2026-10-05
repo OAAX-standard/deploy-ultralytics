@@ -25,6 +25,26 @@ a target needs from the OAAX release artifacts.
 | `convert`  | Convert the exported model with the target's toolchain                |
 | `detect`   | Run detection on an image; writes an annotated image and a JSON list  |
 
+## Export
+
+```sh
+deploy-ultralytics export yolov8n --output exported
+```
+
+`export` takes the name of an Ultralytics detection model (downloaded on first use into the
+current directory) and writes two files into the output directory (default: the current
+directory):
+
+- `yolov8n.onnx`, the exported model: ONNX opset 15, static shapes, simplified, one input of shape
+  `(1, 3, H, W)` and one output of shape `(1, 4 + num_classes, N)`. Non-maximum suppression is not
+  part of the graph; `detect` applies it on the host.
+- `yolov8n.manifest.json`, the model manifest: the input tensor name, the input resolution and the
+  class names.
+
+The resolution is 640 by default; `--imgsz 320` changes it in both files. A model whose task is not
+detection, such as `yolov8n-seg`, is refused with a message naming its task. The `ultralytics`
+package is called as a dependency; none of its code is copied.
+
 ## Targets
 
 | Target | Status  |
