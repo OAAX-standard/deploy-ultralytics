@@ -24,7 +24,7 @@ jobs:
       - name: Install the package
         run: uv sync --locked
 
-      # No OAAX 2.0 runtime is published yet: build the CPU runtime from the oaax-v2 branch of
+      # No OAAX 2.0 runtime or toolchain is published yet: build both from the oaax-v2 branch of
       # the reference implementation. fetch replaces this once release artifacts exist.
       - uses: actions/checkout@v4
         with:
@@ -41,5 +41,19 @@ jobs:
           bash runtime-library/build-runtimes.sh X86_64
           echo "DEPLOY_ULTRALYTICS_RUNTIME=$PWD/runtime-library/artifacts/X86_64/libRuntimeLibrary.so" >> "$GITHUB_ENV"
 
+      - name: Build the CPU toolchain image
+        working-directory: reference-implementation
+        run: bash conversion-toolchain/build-toolchain.sh
+
       - name: Run the test suite
         run: uv run pytest
+
+      # The README's walkthrough is the proof that the documented commands work: run them as written.
+      - name: Run the README walkthrough
+        run: |
+          sed -n '/^## Walkthrough/,/^## Export/p' README.md \
+            | grep '^deploy-ultralytics \(export\|convert\|detect\) ' > walkthrough.sh
+          test "$(wc -l < walkthrough.sh)" -eq 3
+          uv run bash -e -x walkthrough.sh
+          test -s test-image.detections.json
+          test -s test-image.annotated.jpg
