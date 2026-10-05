@@ -57,3 +57,19 @@ def test_detect_without_a_runtime_says_how_to_provide_one(tmp_path):
     )
     assert result.returncode != 0
     assert "--runtime" in result.stderr and "DEPLOY_ULTRALYTICS_RUNTIME" in result.stderr
+
+
+def test_detect_of_a_model_without_its_manifest_says_to_export_it_first(tmp_path):
+    model = tmp_path / "model.onnx"
+    model.write_bytes(b"")
+    runtime = tmp_path / "libRuntimeLibrary.so"
+    runtime.write_bytes(b"")
+
+    result = run(
+        tmp_path, "detect", "--target", "cpu", "--runtime", str(runtime), "--model", str(model),
+        str(TEST_IMAGE),
+    )
+
+    assert result.returncode != 0
+    assert "model.manifest.json" in result.stderr and "export" in result.stderr
+    assert "Traceback" not in result.stderr

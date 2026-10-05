@@ -24,7 +24,12 @@ def detect_image(target_name, runtime, model_path, image_path, output_dir):
     library = _runtime_path(runtime)
     target = load_target(target_name)
     model_path = Path(model_path)
-    manifest = json.loads(model_path.with_suffix(".manifest.json").read_text())
+    manifest_path = model_path.with_suffix(".manifest.json")
+    if not manifest_path.is_file():
+        raise DetectError(
+            f"no model manifest {manifest_path} next to the model: run export to write it"
+        )
+    manifest = json.loads(manifest_path.read_text())
     image = cv2.imread(str(image_path))
     if image is None:
         raise DetectError(f"cannot read image {image_path}")
