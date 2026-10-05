@@ -41,6 +41,8 @@ a fixture. Every target's `detect` output is judged against them.
 _Avoid_: Ground truth, golden output, baseline
 
 **Target config**:
-The part of a target's description that conversion changes about the input: element type,
-layout, normalization. Defaults to the exported model's own input.
+The data file in a target's directory. It holds what conversion changes about the input (element
+type, layout, normalization), the toolchain image reference, where the runtime and toolchain come
+from, and the IoU threshold for matching reference detections. The input description defaults to
+the exported model's own input and the threshold to 0.9.
 _Avoid_: Model config, preprocessing config

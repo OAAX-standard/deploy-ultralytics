@@ -30,7 +30,7 @@ def with_store(store):
     return {**os.environ, ARTIFACTS_ENV_VAR: str(store)}
 
 
-def test_fetch_places_the_runtime_library_and_loads_the_toolchain_image(
+def test_fetch_places_the_runtime_and_loads_the_toolchain_image(
     tmp_path, artifacts, toolchain_image
 ):
     image_archive = artifacts / "conversion-toolchain" / "2.0.0" / "CPU" / "oaax-cpu-toolchain.tar"

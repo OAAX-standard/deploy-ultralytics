@@ -7,7 +7,7 @@ Commit and push straight to `main`; no PRs until phase 1 ships. Every commit car
 automatically) and check the trailer with `git log --format=%(trailers)` before pushing. Never copy code from
 the `ultralytics` package (AGPL-3.0, incompatible with Apache-2.0); call it as a dependency only.
 
-## Runtime libraries during development
+## Runtimes during development
 
 No OAAX 2.0 runtime binaries are published yet (`runtimes/2.0.0/` on S3 returns 403).
 Until the 2.0 release, build runtimes locally from the `oaax-v2` branches:

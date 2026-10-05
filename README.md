@@ -62,7 +62,7 @@ deploy-ultralytics fetch cpu
 ```
 
 `fetch` downloads a target's runtime archive and toolchain image archive from the OAAX release
-artifact store, places the runtime library at `runtimes/cpu/libRuntimeLibrary.so` (under `--output`,
+artifact store, places the runtime at `runtimes/cpu/libRuntimeLibrary.so` (under `--output`,
 default: the current directory) and loads the toolchain image into Docker. The store URL, the
 version and the vendor come from the target's `target.json`.
 
@@ -109,7 +109,7 @@ files into the output directory (default: the current directory):
   [reference detections](fixtures/README.md).
 
 The model manifest is read from next to the model (`yolov8n.cpu.onnx` -> `yolov8n.cpu.manifest.json`). The
-runtime library comes from `--runtime`, or from the `DEPLOY_ULTRALYTICS_RUNTIME` environment
+runtime comes from `--runtime`, or from the `DEPLOY_ULTRALYTICS_RUNTIME` environment
 variable when the option is absent. Tests that need a runtime are skipped, with a message, when
 the variable is not set.
 

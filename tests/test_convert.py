@@ -21,14 +21,14 @@ def test_convert_writes_the_converted_model_and_its_manifest(
 
 
 def test_detect_accepts_the_converted_model_and_matches_the_reference_detections(
-    tmp_path, exported_model, toolchain_image, runtime_library
+    tmp_path, exported_model, toolchain_image, runtime
 ):
     converted = tmp_path / "converted"
     assert convert(tmp_path, exported_model, converted).returncode == 0
 
     result = run(
         tmp_path,
-        "detect", "--target", "cpu", "--runtime", str(runtime_library),
+        "detect", "--target", "cpu", "--runtime", str(runtime),
         "--model", str(converted / "yolov8n.cpu.onnx"),
         "--output", str(tmp_path / "out"), str(TEST_IMAGE),
     )

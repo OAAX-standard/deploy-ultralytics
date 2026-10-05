@@ -11,7 +11,7 @@ from pathlib import Path
 from deploy_ultralytics.target import load_target
 
 ARTIFACTS_ENV_VAR = "DEPLOY_ULTRALYTICS_ARTIFACTS"
-RUNTIME_LIBRARY_NAME = "libRuntimeLibrary.so"
+RUNTIME_FILE_NAME = "libRuntimeLibrary.so"
 
 _ARCHITECTURES = {"x86_64": "x86_64", "amd64": "x86_64", "aarch64": "aarch64", "arm64": "aarch64"}
 _OPERATING_SYSTEMS = {"Linux": "Ubuntu", "Windows": "Windows"}
@@ -24,9 +24,9 @@ class FetchError(Exception):
 def fetch_target(target_name, output_dir):
     """Download a target's runtime and toolchain image from the OAAX release artifact store.
 
-    The runtime library is placed in `<output_dir>/runtimes/<target>/` and the toolchain image is
+    The runtime is placed in `<output_dir>/runtimes/<target>/` and the toolchain image is
     loaded into Docker. `DEPLOY_ULTRALYTICS_ARTIFACTS` replaces the store with a local directory
-    or a URL laid out the same way. Returns the path of the runtime library.
+    or a URL laid out the same way. Returns the path of the runtime.
     """
     target = load_target(target_name)
     store = os.environ.get(ARTIFACTS_ENV_VAR) or target.store_url
@@ -44,10 +44,10 @@ def _place_runtime(store, path, directory):
     with _download(store, path) as archive:
         directory.mkdir(parents=True, exist_ok=True)
         with tarfile.open(archive.name) as tar:
-            members = [m for m in tar.getmembers() if Path(m.name).name == RUNTIME_LIBRARY_NAME]
+            members = [m for m in tar.getmembers() if Path(m.name).name == RUNTIME_FILE_NAME]
             if len(members) != 1:
-                raise FetchError(f"{path} does not hold exactly one {RUNTIME_LIBRARY_NAME}")
-            library = directory / RUNTIME_LIBRARY_NAME
+                raise FetchError(f"{path} does not hold exactly one {RUNTIME_FILE_NAME}")
+            library = directory / RUNTIME_FILE_NAME
             with tar.extractfile(members[0]) as source, library.open("wb") as destination:
                 shutil.copyfileobj(source, destination)
     library.chmod(0o755)
