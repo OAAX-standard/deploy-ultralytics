@@ -12,7 +12,7 @@ only the conversion step differs.
 ```sh
 deploy-ultralytics export yolov8n.pt
 deploy-ultralytics convert yolov8n.onnx --target cpu
-deploy-ultralytics detect  yolov8n.onnx --target cpu --image bus.jpg
+deploy-ultralytics detect  --target cpu --model yolov8n.onnx bus.jpg
 ```
 
 To run on another accelerator, change only `--target`. `fetch` downloads the runtime and toolchain
@@ -45,14 +45,46 @@ The resolution is 640 by default; `--imgsz 320` changes it in both files. A mode
 detection, such as `yolov8n-seg`, is refused with a message naming its task. The `ultralytics`
 package is called as a dependency; none of its code is copied.
 
+## Detect
+
+```sh
+deploy-ultralytics detect --target cpu --runtime path/to/libRuntimeLibrary.so     --model exported/yolov8n.onnx --output out image.jpg
+```
+
+`detect` loads the runtime through [PythonBindings](https://github.com/OAAX-standard/PythonBindings),
+loads the converted model, letterboxes the image to the model's input resolution, applies the
+target's input description (element type, layout, normalization), runs inference, decodes the
+`(1, 4 + num_classes, N)` output and applies non-maximum suppression on the host. It writes two
+files into the output directory (default: the current directory):
+
+- `<image>.annotated.jpg`, the image with the boxes drawn.
+- `<image>.detections.json`, a list of `{"box": [x1, y1, x2, y2], "class": 0, "score": 0.855}` in
+  the pixels of the original image, in the same format as the
+  [reference detections](fixtures/README.md).
+
+The model manifest is read from next to the model (`yolov8n.onnx` -> `yolov8n.manifest.json`). The
+runtime library comes from `--runtime`, or from the `DEPLOY_ULTRALYTICS_RUNTIME` environment
+variable when the option is absent. Tests that need a runtime are skipped, with a message, when
+the variable is not set.
+
+No OAAX 2.0 runtime is published yet. Build the CPU one from the `oaax-v2` branch of
+[reference-implementation](https://github.com/OAAX-standard/reference-implementation)
+(`runtime-library/build-runtimes.sh X86_64`, Linux only) and point the variable at the resulting
+`libRuntimeLibrary.so`.
+
 ## Targets
 
 | Target | Status  |
 | ------ | ------- |
-| CPU    | pending |
+| CPU    | export -> detect runs; detect's input check is pending (see below) |
 | Intel  | pending |
 | NVIDIA | pending |
 | DeepX  | pending |
+
+`detect` does not yet check the runtime's reported input shape and element type against the
+manifest and the target config: the PythonBindings the repository pins read that information from a
+`models` entry of the runtime's info JSON, which no OAAX 2.0 runtime emits. Until that is fixed
+upstream, CPU stays unverified.
 
 ## Install
 

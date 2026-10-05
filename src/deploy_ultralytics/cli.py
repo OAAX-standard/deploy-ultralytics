@@ -16,6 +16,8 @@ def main(argv=None):
         return 2
     if args.command == "export":
         return _export(args)
+    if args.command == "detect":
+        return _detect(args)
     print(f"deploy-ultralytics {args.command}: not implemented yet", file=sys.stderr)
     return 1
 
@@ -33,6 +35,22 @@ def _export(args):
     return 0
 
 
+def _detect(args):
+    from deploy_ultralytics.detect import DetectError, detect_image
+    from deploy_ultralytics.target import TargetError
+
+    try:
+        annotated_path, json_path = detect_image(
+            args.target, args.runtime, args.model, args.image, args.output
+        )
+    except (DetectError, TargetError) as error:
+        print(f"deploy-ultralytics detect: {error}", file=sys.stderr)
+        return 1
+    print(f"annotated image: {annotated_path}")
+    print(f"detections: {json_path}")
+    return 0
+
+
 def _build_parser():
     parser = argparse.ArgumentParser(
         prog="deploy-ultralytics",
@@ -43,10 +61,23 @@ def _build_parser():
         subparser = subparsers.add_parser(name, help=help_text, description=help_text)
         if name == "export":
             _add_export_arguments(subparser)
+        if name == "detect":
+            _add_detect_arguments(subparser)
     return parser
 
 
 def _add_export_arguments(subparser):
     subparser.add_argument("model", help="Ultralytics detection model name, e.g. yolov8n")
     subparser.add_argument("--imgsz", type=int, default=640, help="input resolution (default: 640)")
+    subparser.add_argument("--output", default=".", help="output directory (default: current)")
+
+
+def _add_detect_arguments(subparser):
+    subparser.add_argument("image", help="image to run detection on")
+    subparser.add_argument("--target", required=True, help="target to run on, e.g. cpu")
+    subparser.add_argument("--model", required=True, help="converted model to load")
+    subparser.add_argument(
+        "--runtime",
+        help="runtime library to load (default: the DEPLOY_ULTRALYTICS_RUNTIME environment variable)",
+    )
     subparser.add_argument("--output", default=".", help="output directory (default: current)")
