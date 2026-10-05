@@ -4,8 +4,9 @@ Run an Ultralytics YOLO detection model on several AI accelerators through
 [OAAX](https://github.com/OAAX-standard). The inference program is the same for every accelerator;
 only the conversion step differs.
 
-> Status: the CPU path (export, convert, detect) runs on every push in CI. `detect`'s check of the
-> runtime's reported input is pending, so no target is verified yet; see [Targets](#targets).
+> Status: the CI workflow runs the CPU path (export, convert, detect) on every push. `detect`'s
+> check of the runtime's reported input is pending, so no target is verified yet; see
+> [Targets](#targets).
 
 ## Walkthrough
 
@@ -26,7 +27,9 @@ deploy-ultralytics detect --target cpu --model yolov8n.cpu.onnx fixtures/test-im
 ```
 
 CI runs the three commands above, extracted from this file, after building the CPU runtime and
-toolchain from source. To run on another accelerator, change only `--target`.
+toolchain from source. To run on another accelerator, change `--target` in `convert` and `detect`,
+and in `detect` also `--model`, which is that target's converted model (`yolov8n.<target>.<extension>`),
+and the runtime, which is that target's own. `export` and the exported model stay the same.
 
 | Subcommand | What it does                                                          |
 | ---------- | --------------------------------------------------------------------- |
