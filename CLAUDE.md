@@ -1,0 +1,22 @@
+# deploy-ultralytics
+
+## Workflow (phase 1)
+
+Commit and push straight to `main`; no PRs until phase 1 ships. Every commit carries
+`Signed-off-by` (DCO) — `format.signOff` is on globally, do not bypass it. Never copy code from
+the `ultralytics` package (AGPL-3.0, incompatible with Apache-2.0); call it as a dependency only.
+
+## Runtime libraries during development
+
+No OAAX 2.0 runtime binaries are published yet (`runtimes/2.0.0/` on S3 returns 403).
+Until the 2.0 release, build runtimes locally from the `oaax-v2` branches:
+
+- CPU: `reference-implementation` → `runtime-library/build-runtimes.sh`
+- Intel: `intel-acceleration` → `runtime-library/build-runtimes.sh` (needs `OPENVINO_DIR`)
+- DeepX: `deepx-acceleration` → `runtime-library/build-runtimes.sh` (Docker, needs DX-RT)
+
+Local clones live in `C:\Users\mpods\develop\oaax\<repo>`. Point the example at the built library
+instead of downloading one. Do not commit runtime binaries to this repo.
+
+The repo itself is designed for the post-release state: the runtime is fetched from the release
+artifacts. Do not redesign that around the current gap.
