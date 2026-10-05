@@ -45,6 +45,12 @@ pip install .
 uv sync
 ```
 
+## Reference detections
+
+The boxes Ultralytics itself predicts for the test image are committed under
+[`fixtures/`](fixtures/README.md), with the command that regenerates them. Each target's `detect`
+output is judged against them.
+
 The C++ example this repository started from was dropped; see
 [ADR-0001](docs/adr/0001-python-over-legacy-cpp.md).
 
