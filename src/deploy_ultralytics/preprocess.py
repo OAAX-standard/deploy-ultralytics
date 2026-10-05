@@ -1,0 +1,52 @@
+import cv2
+import numpy as np
+
+PAD_VALUE = 114
+
+
+class Letterbox:
+    """How an image was scaled and padded to fit the model input, so boxes can be mapped back."""
+
+    def __init__(self, scale, pad_x, pad_y):
+        self.scale = scale
+        self.pad_x = pad_x
+        self.pad_y = pad_y
+
+    def to_original(self, boxes, image_shape):
+        """Map xyxy boxes from model-input pixels to the original image, clipped to it."""
+        height, width = image_shape[:2]
+        mapped = (boxes - [self.pad_x, self.pad_y, self.pad_x, self.pad_y]) / self.scale
+        mapped[:, [0, 2]] = mapped[:, [0, 2]].clip(0, width)
+        mapped[:, [1, 3]] = mapped[:, [1, 3]].clip(0, height)
+        return mapped
+
+
+def letterbox(image, size):
+    """Scale a BGR image to fit `size` (height, width) keeping its aspect ratio, pad the rest."""
+    height, width = image.shape[:2]
+    scale = min(size[0] / height, size[1] / width)
+    new_width, new_height = round(width * scale), round(height * scale)
+    pad_x, pad_y = (size[1] - new_width) / 2, (size[0] - new_height) / 2
+    resized = cv2.resize(image, (new_width, new_height), interpolation=cv2.INTER_LINEAR)
+    left, top = round(pad_x - 0.1), round(pad_y - 0.1)
+    padded = cv2.copyMakeBorder(
+        resized,
+        top,
+        size[0] - new_height - top,
+        left,
+        size[1] - new_width - left,
+        cv2.BORDER_CONSTANT,
+        value=(PAD_VALUE,) * 3,
+    )
+    return padded, Letterbox(scale, left, top)
+
+
+def to_input_tensor(image, target):
+    """Turn a letterboxed BGR image into the tensor the target's runtime expects."""
+    rgb = image[:, :, ::-1].astype(np.float32)
+    normalized = (rgb - np.array(target.mean, dtype=np.float32)) / np.array(
+        target.std, dtype=np.float32
+    )
+    if target.layout == "NCHW":
+        normalized = normalized.transpose(2, 0, 1)
+    return np.ascontiguousarray(normalized[np.newaxis].astype(target.element_type))
