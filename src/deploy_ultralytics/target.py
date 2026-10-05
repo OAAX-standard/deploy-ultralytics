@@ -4,6 +4,12 @@ from pathlib import Path
 
 TARGETS_DIR = Path(__file__).parent / "targets"
 
+# What the exported model itself takes as input, and the threshold for matching reference detections.
+DEFAULT_ELEMENT_TYPE = "float32"
+DEFAULT_LAYOUT = "NCHW"
+DEFAULT_NORMALIZATION = {"mean": [0, 0, 0], "std": [255, 255, 255]}
+DEFAULT_IOU_THRESHOLD = 0.9
+
 
 class TargetError(Exception):
     pass
@@ -32,12 +38,13 @@ def load_target(name):
         known = sorted(p.name for p in TARGETS_DIR.iterdir() if (p / "target.json").is_file())
         raise TargetError(f"unknown target '{name}'; known targets: {', '.join(known)}")
     raw = json.loads(path.read_text())
+    normalization = raw.get("normalization", DEFAULT_NORMALIZATION)
     return TargetConfig(
-        element_type=raw["element_type"],
-        layout=raw["layout"],
-        mean=tuple(raw["normalization"]["mean"]),
-        std=tuple(raw["normalization"]["std"]),
-        iou_threshold=raw["iou_threshold"],
+        element_type=raw.get("element_type", DEFAULT_ELEMENT_TYPE),
+        layout=raw.get("layout", DEFAULT_LAYOUT),
+        mean=tuple(normalization["mean"]),
+        std=tuple(normalization["std"]),
+        iou_threshold=raw.get("iou_threshold", DEFAULT_IOU_THRESHOLD),
         store_url=raw["source"]["store_url"],
         version=raw["source"]["version"],
         vendor=raw["source"]["vendor"],
