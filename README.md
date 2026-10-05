@@ -4,19 +4,29 @@ Run an Ultralytics YOLO detection model on several AI accelerators through
 [OAAX](https://github.com/OAAX-standard). The inference program is the same for every accelerator;
 only the conversion step differs.
 
-> Status: work in progress. The commands below show the intended flow; none of the targets is
-> verified yet.
+> Status: the CPU path (export, convert, detect) runs on every push in CI. `detect`'s check of the
+> runtime's reported input is pending, so no target is verified yet; see [Targets](#targets).
 
 ## Walkthrough
+
+Once per machine, fetch the target's runtime and toolchain, and point `detect` at the runtime
+(`fetch` prints the exact line):
+
+```sh
+deploy-ultralytics fetch cpu
+export DEPLOY_ULTRALYTICS_RUNTIME=$PWD/runtimes/cpu/libRuntimeLibrary.so
+```
+
+Then three commands take a model from Ultralytics to boxes on an image:
 
 ```sh
 deploy-ultralytics export yolov8n.pt
 deploy-ultralytics convert yolov8n.onnx --target cpu
-deploy-ultralytics detect  --target cpu --model yolov8n.onnx bus.jpg
+deploy-ultralytics detect --target cpu --model yolov8n.cpu.onnx fixtures/test-image.jpg
 ```
 
-To run on another accelerator, change only `--target`. `fetch` downloads the runtime and toolchain
-a target needs from the OAAX release artifacts.
+CI runs the three commands above, extracted from this file, after building the CPU runtime and
+toolchain from source. To run on another accelerator, change only `--target`.
 
 | Subcommand | What it does                                                          |
 | ---------- | --------------------------------------------------------------------- |
@@ -45,10 +55,46 @@ The resolution is 640 by default; `--imgsz 320` changes it in both files. A mode
 detection, such as `yolov8n-seg`, is refused with a message naming its task. The `ultralytics`
 package is called as a dependency; none of its code is copied.
 
+## Fetch
+
+```sh
+deploy-ultralytics fetch cpu
+```
+
+`fetch` downloads a target's runtime archive and toolchain image archive from the OAAX release
+artifact store, places the runtime library at `runtimes/cpu/libRuntimeLibrary.so` (under `--output`,
+default: the current directory) and loads the toolchain image into Docker. The store URL, the
+version and the vendor come from the target's `target.json`.
+
+No OAAX 2.0 artifacts are published yet. Until they are, set `DEPLOY_ULTRALYTICS_ARTIFACTS` to a
+local directory or a URL that replaces the store and is laid out the same way:
+
+```
+runtimes/2.0.0/CPU/x86_64/Ubuntu/library.tar.gz
+conversion-toolchain/2.0.0/CPU/oaax-cpu-toolchain.tar
+```
+
+The runtime archive holds `libRuntimeLibrary.so`; the toolchain archive is the output of
+`docker save` of the toolchain image. Alternatively skip `fetch`: build the runtime from the `oaax-v2` branch
+of reference-implementation (see Detect) and its toolchain image (see Convert) yourself.
+
+## Convert
+
+```sh
+deploy-ultralytics convert yolov8n.onnx --target cpu --output converted
+```
+
+`convert` runs the target's toolchain image on the exported model and writes the converted model
+to the output directory as `yolov8n.cpu.onnx`, with the model manifest copied beside it as
+`yolov8n.cpu.manifest.json`; that is where `detect` looks for it. The command needs the toolchain
+image in Docker, from `fetch`, or built from the `oaax-v2` branch of
+[reference-implementation](https://github.com/OAAX-standard/reference-implementation)
+(`conversion-toolchain/build-toolchain.sh`).
+
 ## Detect
 
 ```sh
-deploy-ultralytics detect --target cpu --runtime path/to/libRuntimeLibrary.so     --model exported/yolov8n.onnx --output out image.jpg
+deploy-ultralytics detect --target cpu --runtime path/to/libRuntimeLibrary.so --model yolov8n.cpu.onnx --output out image.jpg
 ```
 
 `detect` loads the runtime through [PythonBindings](https://github.com/OAAX-standard/PythonBindings),
@@ -62,7 +108,7 @@ files into the output directory (default: the current directory):
   the pixels of the original image, in the same format as the
   [reference detections](fixtures/README.md).
 
-The model manifest is read from next to the model (`yolov8n.onnx` -> `yolov8n.manifest.json`). The
+The model manifest is read from next to the model (`yolov8n.cpu.onnx` -> `yolov8n.cpu.manifest.json`). The
 runtime library comes from `--runtime`, or from the `DEPLOY_ULTRALYTICS_RUNTIME` environment
 variable when the option is absent. Tests that need a runtime are skipped, with a message, when
 the variable is not set.
@@ -76,7 +122,7 @@ No OAAX 2.0 runtime is published yet. Build the CPU one from the `oaax-v2` branc
 
 | Target | Status  |
 | ------ | ------- |
-| CPU    | export -> detect runs; detect's input check is pending (see below) |
+| CPU    | export -> convert -> detect runs in CI; detect's input check is pending (see below) |
 | Intel  | pending |
 | NVIDIA | pending |
 | DeepX  | pending |
