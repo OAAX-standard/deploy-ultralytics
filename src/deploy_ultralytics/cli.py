@@ -20,10 +20,7 @@ def main(argv=None):
         return _fetch(args)
     if args.command == "convert":
         return _convert(args)
-    if args.command == "detect":
-        return _detect(args)
-    print(f"deploy-ultralytics {args.command}: not implemented yet", file=sys.stderr)
-    return 1
+    return _detect(args)
 
 
 def _export(args):
