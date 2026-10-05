@@ -21,3 +21,18 @@ instead of downloading one. Do not commit runtime binaries to this repo.
 
 The repo itself is designed for the post-release state: the runtime is fetched from the release
 artifacts. Do not redesign that around the current gap.
+
+## Agent skills
+
+### Issue tracker
+
+GitHub Issues of this repository, via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five default labels (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`,
+`wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
