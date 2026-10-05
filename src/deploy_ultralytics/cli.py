@@ -16,6 +16,8 @@ def main(argv=None):
         return 2
     if args.command == "export":
         return _export(args)
+    if args.command == "fetch":
+        return _fetch(args)
     if args.command == "detect":
         return _detect(args)
     print(f"deploy-ultralytics {args.command}: not implemented yet", file=sys.stderr)
@@ -32,6 +34,20 @@ def _export(args):
         return 1
     print(f"exported model: {model_path}")
     print(f"model manifest: {manifest_path}")
+    return 0
+
+
+def _fetch(args):
+    from deploy_ultralytics.fetch import FetchError, fetch_target
+    from deploy_ultralytics.target import TargetError
+
+    try:
+        library = fetch_target(args.target, args.output)
+    except (FetchError, TargetError) as error:
+        print(f"deploy-ultralytics fetch: {error}", file=sys.stderr)
+        return 1
+    print(f"runtime library: {library}")
+    print(f"toolchain image loaded into Docker; set DEPLOY_ULTRALYTICS_RUNTIME={library}")
     return 0
 
 
@@ -61,6 +77,8 @@ def _build_parser():
         subparser = subparsers.add_parser(name, help=help_text, description=help_text)
         if name == "export":
             _add_export_arguments(subparser)
+        if name == "fetch":
+            _add_fetch_arguments(subparser)
         if name == "detect":
             _add_detect_arguments(subparser)
     return parser
@@ -69,6 +87,11 @@ def _build_parser():
 def _add_export_arguments(subparser):
     subparser.add_argument("model", help="Ultralytics detection model name, e.g. yolov8n")
     subparser.add_argument("--imgsz", type=int, default=640, help="input resolution (default: 640)")
+    subparser.add_argument("--output", default=".", help="output directory (default: current)")
+
+
+def _add_fetch_arguments(subparser):
+    subparser.add_argument("target", help="target to fetch the runtime and toolchain for, e.g. cpu")
     subparser.add_argument("--output", default=".", help="output directory (default: current)")
 
 

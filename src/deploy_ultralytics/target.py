@@ -11,13 +11,18 @@ class TargetError(Exception):
 
 @dataclass(frozen=True)
 class TargetConfig:
-    """What conversion changes about the model input, plus the comparison threshold."""
+    """What conversion changes about the model input, the comparison threshold, and where the
+    target's runtime and toolchain come from."""
 
     element_type: str
     layout: str
     mean: tuple
     std: tuple
     iou_threshold: float
+    store_url: str
+    version: str
+    vendor: str
+    toolchain_image: str
 
 
 def load_target(name):
@@ -32,4 +37,8 @@ def load_target(name):
         mean=tuple(raw["normalization"]["mean"]),
         std=tuple(raw["normalization"]["std"]),
         iou_threshold=raw["iou_threshold"],
+        store_url=raw["source"]["store_url"],
+        version=raw["source"]["version"],
+        vendor=raw["source"]["vendor"],
+        toolchain_image=raw["toolchain"]["image"],
     )

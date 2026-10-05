@@ -2,5 +2,11 @@
   "element_type": "float32",
   "layout": "NCHW",
   "normalization": { "mean": [0, 0, 0], "std": [255, 255, 255] },
-  "iou_threshold": 0.9
+  "iou_threshold": 0.9,
+  "source": {
+    "store_url": "https://nbg1.your-objectstorage.com/oaax",
+    "version": "2.0.0",
+    "vendor": "CPU"
+  },
+  "toolchain": { "image": "oaax-cpu-toolchain:2.0.0" }
 }
