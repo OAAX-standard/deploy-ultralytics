@@ -23,6 +23,7 @@ class TargetConfig:
     version: str
     vendor: str
     toolchain_image: str
+    converted_model_extension: str
 
 
 def load_target(name):
@@ -41,4 +42,5 @@ def load_target(name):
         version=raw["source"]["version"],
         vendor=raw["source"]["vendor"],
         toolchain_image=raw["toolchain"]["image"],
+        converted_model_extension=raw["toolchain"]["converted_model_extension"],
     )

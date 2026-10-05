@@ -18,6 +18,8 @@ def main(argv=None):
         return _export(args)
     if args.command == "fetch":
         return _fetch(args)
+    if args.command == "convert":
+        return _convert(args)
     if args.command == "detect":
         return _detect(args)
     print(f"deploy-ultralytics {args.command}: not implemented yet", file=sys.stderr)
@@ -51,6 +53,20 @@ def _fetch(args):
     return 0
 
 
+def _convert(args):
+    from deploy_ultralytics.convert import ConvertError, convert_model
+    from deploy_ultralytics.target import TargetError
+
+    try:
+        model_path, manifest_path = convert_model(args.target, args.model, args.output)
+    except (ConvertError, TargetError) as error:
+        print(f"deploy-ultralytics convert: {error}", file=sys.stderr)
+        return 1
+    print(f"converted model: {model_path}")
+    print(f"model manifest: {manifest_path}")
+    return 0
+
+
 def _detect(args):
     from deploy_ultralytics.detect import DetectError, detect_image
     from deploy_ultralytics.target import TargetError
@@ -79,6 +95,8 @@ def _build_parser():
             _add_export_arguments(subparser)
         if name == "fetch":
             _add_fetch_arguments(subparser)
+        if name == "convert":
+            _add_convert_arguments(subparser)
         if name == "detect":
             _add_detect_arguments(subparser)
     return parser
@@ -92,6 +110,12 @@ def _add_export_arguments(subparser):
 
 def _add_fetch_arguments(subparser):
     subparser.add_argument("target", help="target to fetch the runtime and toolchain for, e.g. cpu")
+    subparser.add_argument("--output", default=".", help="output directory (default: current)")
+
+
+def _add_convert_arguments(subparser):
+    subparser.add_argument("model", help="exported model to convert, e.g. yolov8n.onnx")
+    subparser.add_argument("--target", required=True, help="target to convert for, e.g. cpu")
     subparser.add_argument("--output", default=".", help="output directory (default: current)")
 
 
