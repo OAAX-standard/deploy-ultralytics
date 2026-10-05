@@ -24,5 +24,22 @@ jobs:
       - name: Install the package
         run: uv sync --locked
 
+      # No OAAX 2.0 runtime is published yet: build the CPU runtime from the oaax-v2 branch of
+      # the reference implementation. fetch replaces this once release artifacts exist.
+      - uses: actions/checkout@v4
+        with:
+          repository: OAAX-standard/reference-implementation
+          ref: oaax-v2
+          path: reference-implementation
+          submodules: recursive
+          lfs: true
+
+      - name: Build the CPU runtime
+        working-directory: reference-implementation
+        run: |
+          sudo bash scripts/setup-env.sh
+          bash runtime-library/build-runtimes.sh X86_64
+          echo "DEPLOY_ULTRALYTICS_RUNTIME=$PWD/runtime-library/artifacts/X86_64/libRuntimeLibrary.so" >> "$GITHUB_ENV"
+
       - name: Run the test suite
         run: uv run pytest
