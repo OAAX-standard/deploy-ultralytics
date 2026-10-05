@@ -1,51 +1,9 @@
 import json
 import os
-import subprocess
-import sys
-from pathlib import Path
 
-import pytest
+from helpers import FIXTURES, TEST_IMAGE, iou, run
 
-FIXTURES = Path(__file__).parent.parent / "fixtures"
-TEST_IMAGE = FIXTURES / "test-image.jpg"
 IOU_THRESHOLD = 0.9  # the cpu target's threshold
-
-
-@pytest.fixture(scope="session")
-def runtime_library():
-    path = os.environ.get("DEPLOY_ULTRALYTICS_RUNTIME")
-    if not path:
-        pytest.skip("DEPLOY_ULTRALYTICS_RUNTIME is not set: no runtime library to run detect with")
-    assert Path(path).is_file(), f"DEPLOY_ULTRALYTICS_RUNTIME={path} is not a file"
-    return Path(path)
-
-
-@pytest.fixture(scope="session")
-def exported_model(weights_dir, tmp_path_factory):
-    out = tmp_path_factory.mktemp("exported")
-    result = run(weights_dir, "export", "yolov8n", "--output", str(out))
-    assert result.returncode == 0, result.stderr
-    return out / "yolov8n.onnx"
-
-
-def run(cwd, *args, env=None):
-    return subprocess.run(
-        [sys.executable, "-m", "deploy_ultralytics", *args],
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        cwd=cwd,
-        env=env,
-    )
-
-
-def iou(a, b):
-    width = min(a[2], b[2]) - max(a[0], b[0])
-    height = min(a[3], b[3]) - max(a[1], b[1])
-    intersection = max(width, 0) * max(height, 0)
-    area = lambda box: (box[2] - box[0]) * (box[3] - box[1])
-    return intersection / (area(a) + area(b) - intersection)
 
 
 def detect(tmp_path, runtime_library, exported_model, out):

@@ -2,24 +2,12 @@ import io
 import os
 import platform
 import subprocess
-import sys
 import tarfile
 
 import pytest
+from helpers import run
 
 ARTIFACTS_ENV_VAR = "DEPLOY_ULTRALYTICS_ARTIFACTS"
-
-
-def run(cwd, *args, env=None):
-    return subprocess.run(
-        [sys.executable, "-m", "deploy_ultralytics", *args],
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        cwd=cwd,
-        env=env,
-    )
 
 
 @pytest.fixture
