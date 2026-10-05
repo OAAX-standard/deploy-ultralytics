@@ -3,7 +3,8 @@
 ## Workflow (phase 1)
 
 Commit and push straight to `main`; no PRs until phase 1 ships. Every commit carries
-`Signed-off-by` (DCO) — `format.signOff` is on globally, do not bypass it. Never copy code from
+`Signed-off-by` (DCO): always pass `-s` to `git commit` (Git has no setting that adds it
+automatically) and check the trailer with `git log --format=%(trailers)` before pushing. Never copy code from
 the `ultralytics` package (AGPL-3.0, incompatible with Apache-2.0); call it as a dependency only.
 
 ## Runtime libraries during development
