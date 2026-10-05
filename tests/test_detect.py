@@ -1,9 +1,7 @@
 import json
 import os
 
-from helpers import FIXTURES, TEST_IMAGE, iou, run
-
-IOU_THRESHOLD = 0.9  # the cpu target's threshold
+from helpers import TEST_IMAGE, assert_matches_reference_detections, run
 
 
 def detect(tmp_path, runtime_library, exported_model, out):
@@ -24,13 +22,7 @@ def test_detect_finds_every_reference_detection(tmp_path, runtime_library, expor
     assert result.returncode == 0, result.stderr
 
     detections = json.loads((out / "test-image.detections.json").read_text())
-    reference = json.loads((FIXTURES / "test-image.yolov8n.json").read_text())["detections"]
-    for expected in reference:
-        best = max(
-            (iou(expected["box"], d["box"]) for d in detections if d["class"] == expected["class"]),
-            default=0,
-        )
-        assert best >= IOU_THRESHOLD, f"no class {expected['class']} detection matches {expected}"
+    assert_matches_reference_detections(detections, "cpu")
 
 
 def test_detect_writes_the_annotated_image_and_the_json_where_asked(

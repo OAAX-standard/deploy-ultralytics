@@ -1,8 +1,6 @@
 import json
 
-from helpers import FIXTURES, TEST_IMAGE, iou, run
-
-IOU_THRESHOLD = 0.9  # the cpu target's threshold
+from helpers import TEST_IMAGE, assert_matches_reference_detections, run
 
 
 def convert(tmp_path, model, out):
@@ -37,13 +35,7 @@ def test_detect_accepts_the_converted_model_and_matches_the_reference_detections
 
     assert result.returncode == 0, result.stderr
     detections = json.loads((tmp_path / "out" / "test-image.detections.json").read_text())
-    reference = json.loads((FIXTURES / "test-image.yolov8n.json").read_text())["detections"]
-    for expected in reference:
-        best = max(
-            (iou(expected["box"], d["box"]) for d in detections if d["class"] == expected["class"]),
-            default=0,
-        )
-        assert best >= IOU_THRESHOLD, f"no class {expected['class']} detection matches {expected}"
+    assert_matches_reference_detections(detections, "cpu")
 
 
 def test_convert_of_a_file_that_is_not_a_model_reports_the_toolchain_failure(
