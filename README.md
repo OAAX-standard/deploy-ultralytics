@@ -68,6 +68,12 @@ uv sync
 The C++ example this repository started from was dropped; see
 [ADR-0001](docs/adr/0001-python-over-legacy-cpp.md).
 
+## Reference detections
+
+The boxes Ultralytics itself predicts for the test image are committed under
+[`fixtures/`](fixtures/README.md), with the command that regenerates them. Each target's `detect`
+output is judged against them.
+
 ## License
 
 Apache-2.0. Ultralytics is called as a dependency only; none of its code is copied here.
