@@ -4,8 +4,9 @@ Run an Ultralytics YOLO detection model on several AI accelerators through
 [OAAX](https://github.com/OAAX-standard). The inference program is the same for every accelerator;
 only the conversion step differs.
 
-> Status: the CPU path (export, convert, detect) runs on every push in CI. `detect`'s check of the
-> runtime's reported input is pending, so no target is verified yet; see [Targets](#targets).
+> Status: the CI workflow runs the CPU path (export, convert, detect) on every push. `detect`'s
+> check of the runtime's reported input is pending, so no target is verified yet; see
+> [Targets](#targets).
 
 ## Walkthrough
 
@@ -26,7 +27,9 @@ deploy-ultralytics detect --target cpu --model yolov8n.cpu.onnx fixtures/test-im
 ```
 
 CI runs the three commands above, extracted from this file, after building the CPU runtime and
-toolchain from source. To run on another accelerator, change only `--target`.
+toolchain from source. To run on another accelerator, change `--target` in `convert` and `detect`,
+and in `detect` also `--model`, which is that target's converted model (`yolov8n.<target>.<extension>`),
+and the runtime, which is that target's own. `export` and the exported model stay the same.
 
 | Subcommand | What it does                                                          |
 | ---------- | --------------------------------------------------------------------- |
@@ -62,7 +65,7 @@ deploy-ultralytics fetch cpu
 ```
 
 `fetch` downloads a target's runtime archive and toolchain image archive from the OAAX release
-artifact store, places the runtime library at `runtimes/cpu/libRuntimeLibrary.so` (under `--output`,
+artifact store, places the runtime at `runtimes/cpu/libRuntimeLibrary.so` (under `--output`,
 default: the current directory) and loads the toolchain image into Docker. The store URL, the
 version and the vendor come from the target's `target.json`.
 
@@ -109,7 +112,7 @@ files into the output directory (default: the current directory):
   [reference detections](fixtures/README.md).
 
 The model manifest is read from next to the model (`yolov8n.cpu.onnx` -> `yolov8n.cpu.manifest.json`). The
-runtime library comes from `--runtime`, or from the `DEPLOY_ULTRALYTICS_RUNTIME` environment
+runtime comes from `--runtime`, or from the `DEPLOY_ULTRALYTICS_RUNTIME` environment
 variable when the option is absent. Tests that need a runtime are skipped, with a message, when
 the variable is not set.
 

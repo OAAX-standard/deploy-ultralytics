@@ -45,8 +45,15 @@ jobs:
         working-directory: reference-implementation
         run: bash conversion-toolchain/build-toolchain.sh
 
+      # The detect and convert tests skip when the runtime or toolchain is missing; in CI that
+      # would hide a broken build, so any skipped test fails the job.
       - name: Run the test suite
-        run: uv run pytest
+        run: |
+          uv run pytest -rs | tee pytest.log
+          if grep -q '^SKIPPED' pytest.log; then
+            echo "::error::tests were skipped; CI must run every test"
+            exit 1
+          fi
 
       # The README's walkthrough is the proof that the documented commands work: run them as written.
       - name: Run the README walkthrough

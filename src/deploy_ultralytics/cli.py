@@ -20,10 +20,7 @@ def main(argv=None):
         return _fetch(args)
     if args.command == "convert":
         return _convert(args)
-    if args.command == "detect":
-        return _detect(args)
-    print(f"deploy-ultralytics {args.command}: not implemented yet", file=sys.stderr)
-    return 1
+    return _detect(args)
 
 
 def _export(args):
@@ -48,7 +45,7 @@ def _fetch(args):
     except (FetchError, TargetError) as error:
         print(f"deploy-ultralytics fetch: {error}", file=sys.stderr)
         return 1
-    print(f"runtime library: {library}")
+    print(f"runtime: {library}")
     print(f"toolchain image loaded into Docker; set DEPLOY_ULTRALYTICS_RUNTIME={library}")
     return 0
 
@@ -125,6 +122,6 @@ def _add_detect_arguments(subparser):
     subparser.add_argument("--model", required=True, help="converted model to load")
     subparser.add_argument(
         "--runtime",
-        help="runtime library to load (default: the DEPLOY_ULTRALYTICS_RUNTIME environment variable)",
+        help="runtime to load (default: the DEPLOY_ULTRALYTICS_RUNTIME environment variable)",
     )
     subparser.add_argument("--output", default=".", help="output directory (default: current)")

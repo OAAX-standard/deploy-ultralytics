@@ -7,24 +7,24 @@ from helpers import run
 
 
 @pytest.fixture(scope="session")
-def weights_dir(tmp_path_factory):
+def source_models_dir(tmp_path_factory):
     """A working directory shared by all tests so Ultralytics downloads each model once."""
-    return tmp_path_factory.mktemp("weights")
+    return tmp_path_factory.mktemp("source-models")
 
 
 @pytest.fixture(scope="session")
-def runtime_library():
+def runtime():
     path = os.environ.get("DEPLOY_ULTRALYTICS_RUNTIME")
     if not path:
-        pytest.skip("DEPLOY_ULTRALYTICS_RUNTIME is not set: no runtime library to run detect with")
+        pytest.skip("DEPLOY_ULTRALYTICS_RUNTIME is not set: no runtime to run detect with")
     assert Path(path).is_file(), f"DEPLOY_ULTRALYTICS_RUNTIME={path} is not a file"
     return Path(path)
 
 
 @pytest.fixture(scope="session")
-def exported_model(weights_dir, tmp_path_factory):
+def exported_model(source_models_dir, tmp_path_factory):
     out = tmp_path_factory.mktemp("exported")
-    result = run(weights_dir, "export", "yolov8n", "--output", str(out))
+    result = run(source_models_dir, "export", "yolov8n", "--output", str(out))
     assert result.returncode == 0, result.stderr
     return out / "yolov8n.onnx"
 

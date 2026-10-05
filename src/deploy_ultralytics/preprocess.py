@@ -26,9 +26,9 @@ def letterbox(image, size):
     height, width = image.shape[:2]
     scale = min(size[0] / height, size[1] / width)
     new_width, new_height = round(width * scale), round(height * scale)
-    pad_x, pad_y = (size[1] - new_width) / 2, (size[0] - new_height) / 2
     resized = cv2.resize(image, (new_width, new_height), interpolation=cv2.INTER_LINEAR)
-    left, top = round(pad_x - 0.1), round(pad_y - 0.1)
+    # An odd amount of padding leaves the extra pixel on the right or bottom.
+    left, top = (size[1] - new_width) // 2, (size[0] - new_height) // 2
     padded = cv2.copyMakeBorder(
         resized,
         top,

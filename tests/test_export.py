@@ -5,14 +5,14 @@ import sys
 import onnx
 
 
-def run(weights_dir, *args):
+def run(source_models_dir, *args):
     return subprocess.run(
         [sys.executable, "-m", "deploy_ultralytics", *args],
         capture_output=True,
         text=True,
         encoding="utf-8",
         errors="replace",
-        cwd=weights_dir,
+        cwd=source_models_dir,
     )
 
 
@@ -20,8 +20,8 @@ def shape_of(value_info):
     return [d.dim_value for d in value_info.type.tensor_type.shape.dim]
 
 
-def test_export_writes_the_exported_model_and_manifest(weights_dir, tmp_path):
-    result = run(weights_dir, "export", "yolov8n", "--output", str(tmp_path))
+def test_export_writes_the_exported_model_and_manifest(source_models_dir, tmp_path):
+    result = run(source_models_dir, "export", "yolov8n", "--output", str(tmp_path))
     assert result.returncode == 0, result.stderr
 
     model = onnx.load(tmp_path / "yolov8n.onnx")
@@ -40,8 +40,8 @@ def test_export_writes_the_exported_model_and_manifest(weights_dir, tmp_path):
     assert model.opset_import[0].version == 15
 
 
-def test_imgsz_changes_the_resolution_in_model_and_manifest(weights_dir, tmp_path):
-    result = run(weights_dir, "export", "yolov8n", "--imgsz", "320", "--output", str(tmp_path))
+def test_imgsz_changes_the_resolution_in_model_and_manifest(source_models_dir, tmp_path):
+    result = run(source_models_dir, "export", "yolov8n", "--imgsz", "320", "--output", str(tmp_path))
     assert result.returncode == 0, result.stderr
 
     model = onnx.load(tmp_path / "yolov8n.onnx")
@@ -52,8 +52,8 @@ def test_imgsz_changes_the_resolution_in_model_and_manifest(weights_dir, tmp_pat
     assert manifest["input_resolution"] == [320, 320]
 
 
-def test_export_refuses_a_segmentation_model_and_names_the_task(weights_dir, tmp_path):
-    result = run(weights_dir, "export", "yolov8n-seg", "--output", str(tmp_path))
+def test_export_refuses_a_segmentation_model_and_names_the_task(source_models_dir, tmp_path):
+    result = run(source_models_dir, "export", "yolov8n-seg", "--output", str(tmp_path))
     assert result.returncode != 0
     assert "task 'segment'" in result.stderr
     assert list(tmp_path.iterdir()) == []
