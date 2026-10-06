@@ -15,6 +15,8 @@ dependencies = [
     "onnx>=1.23.1",
     "onnxslim>=0.1.97",
     "opencv-python",
+    "torch",
+    "torchvision",
     "ultralytics>=8.4.123",
 ]
 
@@ -29,6 +31,18 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 deploy_ultralytics = ["targets/*/*"]
+
+# Nothing here runs torch on a GPU: export runs on CPU and inference goes through OAAX runtimes.
+# The CPU build spares every install the CUDA wheels, several GB. uv applies sources only to
+# direct dependencies, so torch and torchvision are listed above although ultralytics pulls them.
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+torchvision = { index = "pytorch-cpu" }
 
 [dependency-groups]
 dev = ["pytest>=7"]
