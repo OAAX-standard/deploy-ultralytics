@@ -34,7 +34,7 @@ TOOLCHAIN_IMAGE = "oaax-cpu-toolchain:2.0.0"
 
 @pytest.fixture(scope="session")
 def toolchain_image():
-    """The CPU toolchain image, built from the `oaax-v2` branch of reference-implementation."""
+    """The CPU toolchain image, loaded by `deploy-ultralytics fetch cpu`."""
     try:
         found = subprocess.run(
             ["docker", "image", "inspect", TOOLCHAIN_IMAGE], capture_output=True
@@ -43,7 +43,6 @@ def toolchain_image():
         found = False
     if not found:
         pytest.skip(
-            f"toolchain image {TOOLCHAIN_IMAGE} is not in Docker: build it with "
-            "conversion-toolchain/build-toolchain.sh from the oaax-v2 branch of reference-implementation"
+            f"toolchain image {TOOLCHAIN_IMAGE} is not in Docker: run `deploy-ultralytics fetch cpu`"
         )
     return TOOLCHAIN_IMAGE
