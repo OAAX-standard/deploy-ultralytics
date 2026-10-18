@@ -29,7 +29,7 @@ jobs:
           git config --global --add url."https://x-access-token:${PYTHONBINDINGS_TOKEN}@github.com/".insteadOf "git@github.com:"
 
       - name: Install the package
-        run: uv sync --locked
+        run: uv sync --locked --extra test
 
       # The README's walkthrough is the proof that the documented commands work: run them as written.
       # Its fetch also provides the runtime and the toolchain image the test suite needs.
