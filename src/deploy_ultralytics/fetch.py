@@ -79,7 +79,7 @@ def _download(store, path):
     except (urllib.error.URLError, OSError) as error:
         destination.close()
         raise FetchError(
-            f"cannot get {source}: {error}; until OAAX 2.0 is published, "
+            f"cannot get {source}: {error}; to use another store, "
             f"point {ARTIFACTS_ENV_VAR} at a local directory or URL holding {path}"
         ) from error
     destination.flush()
