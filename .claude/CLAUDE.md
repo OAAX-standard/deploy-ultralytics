@@ -4,7 +4,8 @@
 
 Work on a branch from `main` and open one pull request per concern. Every commit carries
 `Signed-off-by` (DCO): always pass `-s` to `git commit` (Git has no setting that adds it
-automatically) and check the trailer with `git log --format=%(trailers)` before pushing. Never copy code from
+automatically) and check the trailer with `git log --format=%(trailers)` before pushing. Never put
+`Co-Authored-By` or `Claude-Session` lines in a commit message. Never copy code from
 the `ultralytics` package (AGPL-3.0, incompatible with Apache-2.0); call it as a dependency only.
 
 ## Runtimes
