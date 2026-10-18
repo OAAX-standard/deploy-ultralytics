@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 
 
-def main(argv=None):
+def main(argv: list[str] | None = None) -> int:
     args = _build_parser().parse_args(argv)
     image = Path(args.image)
     output = Path(args.output) if args.output else image.with_suffix(f".{Path(args.model).stem}.json")
@@ -16,7 +16,7 @@ def main(argv=None):
     return 0
 
 
-def reference_detections(model_name, image):
+def reference_detections(model_name: str, image: str | Path) -> dict:
     """Run the source model through Ultralytics' own `predict` on the image.
 
     Boxes are rounded to 0.1 px and scores to 3 decimals so that the fixture does not churn on
@@ -38,7 +38,7 @@ def reference_detections(model_name, image):
     return {"model": model_name, "image": Path(image).name, "detections": detections}
 
 
-def _build_parser():
+def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="python -m deploy_ultralytics.reference",
         description="Write the reference detections Ultralytics produces for a model and image.",

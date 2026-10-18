@@ -1,5 +1,9 @@
+from collections.abc import Sequence
+
 import cv2
 import numpy as np
+
+from deploy_ultralytics.target import TargetConfig
 
 PAD_VALUE = 114
 
@@ -7,12 +11,12 @@ PAD_VALUE = 114
 class Letterbox:
     """How an image was scaled and padded to fit the model input, so boxes can be mapped back."""
 
-    def __init__(self, scale, pad_x, pad_y):
+    def __init__(self, scale: float, pad_x: int, pad_y: int) -> None:
         self.scale = scale
         self.pad_x = pad_x
         self.pad_y = pad_y
 
-    def to_original(self, boxes, image_shape):
+    def to_original(self, boxes: np.ndarray, image_shape: tuple[int, ...]) -> np.ndarray:
         """Map xyxy boxes from model-input pixels to the original image, clipped to it."""
         height, width = image_shape[:2]
         mapped = (boxes - [self.pad_x, self.pad_y, self.pad_x, self.pad_y]) / self.scale
@@ -21,7 +25,7 @@ class Letterbox:
         return mapped
 
 
-def letterbox(image, size):
+def letterbox(image: np.ndarray, size: Sequence[int]) -> tuple[np.ndarray, Letterbox]:
     """Scale a BGR image to fit `size` (height, width) keeping its aspect ratio, pad the rest."""
     height, width = image.shape[:2]
     scale = min(size[0] / height, size[1] / width)
@@ -41,7 +45,7 @@ def letterbox(image, size):
     return padded, Letterbox(scale, left, top)
 
 
-def to_input_tensor(image, target):
+def to_input_tensor(image: np.ndarray, target: TargetConfig) -> np.ndarray:
     """Turn a letterboxed BGR image into the tensor the target's runtime expects."""
     rgb = image[:, :, ::-1].astype(np.float32)
     normalized = (rgb - np.array(target.mean, dtype=np.float32)) / np.array(target.std, dtype=np.float32)

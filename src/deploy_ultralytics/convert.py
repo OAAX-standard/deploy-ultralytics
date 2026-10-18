@@ -14,7 +14,7 @@ class ConvertError(Exception):
     pass
 
 
-def convert_model(target_name, model_path, output_dir):
+def convert_model(target_name: str, model_path: str | Path, output_dir: str | Path) -> tuple[Path, Path]:
     """Run a target's toolchain on an exported model.
 
     Writes `<model stem>.<target>.<extension>` and the model manifest as
@@ -48,7 +48,7 @@ def convert_model(target_name, model_path, output_dir):
     return converted_path, output_dir / f"{stem}.manifest.json"
 
 
-def _run_toolchain(image, model_path):
+def _run_toolchain(image: str, model_path: Path) -> dict[str, bytes]:
     """Return the files the toolchain wrote to its output directory, by name."""
     created = _docker("create", image, f"{CONTAINER_INPUT_DIR}/{model_path.name}", CONTAINER_OUTPUT_DIR)
     if created.returncode != 0:
@@ -69,7 +69,7 @@ def _run_toolchain(image, model_path):
         _docker("rm", "--force", container)
 
 
-def _input_tar(model_path):
+def _input_tar(model_path: Path) -> bytes:
     """A tar of `input/<model>`; the directory is world-writable because the toolchain writes next to its input."""
     buffer = io.BytesIO()
     with tarfile.open(fileobj=buffer, mode="w") as tar:
@@ -81,28 +81,28 @@ def _input_tar(model_path):
     return buffer.getvalue()
 
 
-def _world_readable(info):
+def _world_readable(info: tarfile.TarInfo) -> tarfile.TarInfo:
     info.mode = 0o644
     return info
 
 
-def _tar_files(data):
+def _tar_files(data: bytes) -> dict[str, bytes]:
     with tarfile.open(fileobj=io.BytesIO(data)) as tar:
         return {
             Path(member.name).name: tar.extractfile(member).read() for member in tar.getmembers() if member.isfile()
         }
 
 
-def _docker(*args, stdin=None):
+def _docker(*args: str, stdin: bytes | None = None) -> subprocess.CompletedProcess[bytes]:
     return subprocess.run(["docker", *args], input=stdin, capture_output=True)
 
 
-def _docker_checked(*args, stdin=None, failure):
+def _docker_checked(*args: str, stdin: bytes | None = None, failure: str) -> subprocess.CompletedProcess[bytes]:
     result = _docker(*args, stdin=stdin)
     if result.returncode != 0:
         raise ConvertError(f"{failure}: {_text(result.stderr)}")
     return result
 
 
-def _text(output):
+def _text(output: bytes) -> str:
     return output.decode(errors="replace").strip()
