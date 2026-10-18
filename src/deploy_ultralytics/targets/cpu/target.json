@@ -4,7 +4,7 @@
   "normalization": { "mean": [0, 0, 0], "std": [255, 255, 255] },
   "iou_threshold": 0.9,
   "source": {
-    "store_url": "https://nbg1.your-objectstorage.com/oaax",
+    "store_url": "https://oaax.nbg1.your-objectstorage.com",
     "version": "2.0.0",
     "vendor": "CPU"
   },
