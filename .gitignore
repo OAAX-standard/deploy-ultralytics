@@ -4,3 +4,14 @@ __pycache__/
 build/
 dist/
 *.pt
+.pytest_cache/
+.ruff_cache/
+.idea/
+
+# Produced by the walkthrough, fetch and the runtime
+runtimes/
+*.onnx
+*.manifest.json
+*.annotated.jpg
+*.detections.json
+runtime.log
