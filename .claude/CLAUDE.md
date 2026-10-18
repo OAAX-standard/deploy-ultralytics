@@ -18,13 +18,13 @@ and pass it to `detect` with `--runtime` or `DEPLOY_ULTRALYTICS_RUNTIME`.
 
 ### Issue tracker
 
-GitHub Issues of this repository, via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+GitHub Issues of this repository, via the `gh` CLI. See `.claude/rules/issue-tracker.md`.
 
 ### Triage labels
 
 The five default labels (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`,
-`wontfix`). See `docs/agents/triage-labels.md`.
+`wontfix`). See `.claude/rules/triage-labels.md`.
 
 ### Domain docs
 
-Single-context: `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+Single-context: `GLOSSARY.md` and `docs/adr/` at the repo root. See `.claude/rules/domain.md`.
