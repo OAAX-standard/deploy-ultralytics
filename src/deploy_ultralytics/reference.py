@@ -32,7 +32,7 @@ def reference_detections(model_name, image):
             "score": round(score, 3),
         }
         for box, cls, score in zip(
-            result.boxes.xyxy.tolist(), result.boxes.cls.tolist(), result.boxes.conf.tolist()
+            result.boxes.xyxy.tolist(), result.boxes.cls.tolist(), result.boxes.conf.tolist(), strict=True
         )
     ]
     return {"model": model_name, "image": Path(image).name, "detections": detections}

@@ -25,8 +25,11 @@ def iou(a, b):
     width = min(a[2], b[2]) - max(a[0], b[0])
     height = min(a[3], b[3]) - max(a[1], b[1])
     intersection = max(width, 0) * max(height, 0)
-    area = lambda box: (box[2] - box[0]) * (box[3] - box[1])
-    return intersection / (area(a) + area(b) - intersection)
+    return intersection / (_area(a) + _area(b) - intersection)
+
+
+def _area(box):
+    return (box[2] - box[0]) * (box[3] - box[1])
 
 
 def assert_matches_reference_detections(detections, target_name):

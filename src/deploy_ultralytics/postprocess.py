@@ -29,7 +29,7 @@ def decode(output, letterbox_, image_shape):
             "class": int(cls),
             "score": round(float(score), 3),
         }
-        for box, cls, score in zip(original, classes[kept], scores[kept])
+        for box, cls, score in zip(original, classes[kept], scores[kept], strict=True)
     ]
 
 
