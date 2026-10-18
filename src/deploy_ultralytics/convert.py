@@ -26,21 +26,17 @@ def convert_model(target_name, model_path, output_dir):
     model_path = Path(model_path)
     manifest_path = model_path.with_suffix(".manifest.json")
     if not manifest_path.is_file():
-        raise ConvertError(
-            f"no model manifest {manifest_path} next to the model: run export to write it"
-        )
+        raise ConvertError(f"no model manifest {manifest_path} next to the model: run export to write it")
     if _docker("image", "inspect", target.toolchain_image).returncode != 0:
         raise ConvertError(
-            f"toolchain image {target.toolchain_image} is not in Docker: "
-            f"run `deploy-ultralytics fetch {target_name}`"
+            f"toolchain image {target.toolchain_image} is not in Docker: run `deploy-ultralytics fetch {target_name}`"
         )
 
     produced = _run_toolchain(target.toolchain_image, model_path)
     candidates = [name for name in produced if name.endswith(f".{target.converted_model_extension}")]
     if len(candidates) != 1:
         raise ConvertError(
-            f"the toolchain wrote {sorted(produced)}; expected exactly one "
-            f".{target.converted_model_extension} file"
+            f"the toolchain wrote {sorted(produced)}; expected exactly one .{target.converted_model_extension} file"
         )
 
     output_dir = Path(output_dir)
@@ -93,9 +89,7 @@ def _world_readable(info):
 def _tar_files(data):
     with tarfile.open(fileobj=io.BytesIO(data)) as tar:
         return {
-            Path(member.name).name: tar.extractfile(member).read()
-            for member in tar.getmembers()
-            if member.isfile()
+            Path(member.name).name: tar.extractfile(member).read() for member in tar.getmembers() if member.isfile()
         }
 
 

@@ -36,13 +36,9 @@ TOOLCHAIN_IMAGE = "oaax-cpu-toolchain:2.0.0"
 def toolchain_image():
     """The CPU toolchain image, loaded by `deploy-ultralytics fetch cpu`."""
     try:
-        found = subprocess.run(
-            ["docker", "image", "inspect", TOOLCHAIN_IMAGE], capture_output=True
-        ).returncode == 0
+        found = subprocess.run(["docker", "image", "inspect", TOOLCHAIN_IMAGE], capture_output=True).returncode == 0
     except FileNotFoundError:
         found = False
     if not found:
-        pytest.skip(
-            f"toolchain image {TOOLCHAIN_IMAGE} is not in Docker: run `deploy-ultralytics fetch cpu`"
-        )
+        pytest.skip(f"toolchain image {TOOLCHAIN_IMAGE} is not in Docker: run `deploy-ultralytics fetch cpu`")
     return TOOLCHAIN_IMAGE

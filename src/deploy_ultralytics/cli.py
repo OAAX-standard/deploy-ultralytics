@@ -69,9 +69,7 @@ def _detect(args):
     from deploy_ultralytics.target import TargetError
 
     try:
-        annotated_path, json_path = detect_image(
-            args.target, args.runtime, args.model, args.image, args.output
-        )
+        annotated_path, json_path = detect_image(args.target, args.runtime, args.model, args.image, args.output)
     except (DetectError, TargetError) as error:
         print(f"deploy-ultralytics detect: {error}", file=sys.stderr)
         return 1

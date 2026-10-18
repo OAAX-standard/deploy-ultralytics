@@ -7,9 +7,7 @@ def convert(tmp_path, model, out):
     return run(tmp_path, "convert", "--target", "cpu", "--output", str(out), str(model))
 
 
-def test_convert_writes_the_converted_model_and_its_manifest(
-    tmp_path, exported_model, toolchain_image
-):
+def test_convert_writes_the_converted_model_and_its_manifest(tmp_path, exported_model, toolchain_image):
     out = tmp_path / "converted"
     result = convert(tmp_path, exported_model, out)
 
@@ -28,9 +26,16 @@ def test_detect_accepts_the_converted_model_and_matches_the_reference_detections
 
     result = run(
         tmp_path,
-        "detect", "--target", "cpu", "--runtime", str(runtime),
-        "--model", str(converted / "yolov8n.cpu.onnx"),
-        "--output", str(tmp_path / "out"), str(TEST_IMAGE),
+        "detect",
+        "--target",
+        "cpu",
+        "--runtime",
+        str(runtime),
+        "--model",
+        str(converted / "yolov8n.cpu.onnx"),
+        "--output",
+        str(tmp_path / "out"),
+        str(TEST_IMAGE),
     )
 
     assert result.returncode == 0, result.stderr
@@ -38,9 +43,7 @@ def test_detect_accepts_the_converted_model_and_matches_the_reference_detections
     assert_matches_reference_detections(detections, "cpu")
 
 
-def test_convert_of_a_file_that_is_not_a_model_reports_the_toolchain_failure(
-    tmp_path, toolchain_image
-):
+def test_convert_of_a_file_that_is_not_a_model_reports_the_toolchain_failure(tmp_path, toolchain_image):
     not_a_model = tmp_path / "broken.onnx"
     not_a_model.write_text("not an onnx file")
     not_a_model.with_suffix(".manifest.json").write_text("{}")

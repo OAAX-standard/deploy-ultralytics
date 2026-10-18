@@ -26,9 +26,7 @@ def detect_image(target_name, runtime, model_path, image_path, output_dir):
     model_path = Path(model_path)
     manifest_path = model_path.with_suffix(".manifest.json")
     if not manifest_path.is_file():
-        raise DetectError(
-            f"no model manifest {manifest_path} next to the model: run export to write it"
-        )
+        raise DetectError(f"no model manifest {manifest_path} next to the model: run export to write it")
     manifest = json.loads(manifest_path.read_text())
     image = cv2.imread(str(image_path))
     if image is None:
@@ -70,7 +68,5 @@ def _annotate(image, detections, class_names):
         x1, y1, x2, y2 = (round(v) for v in detection["box"])
         label = f"{class_names[detection['class']]} {detection['score']:.2f}"
         cv2.rectangle(annotated, (x1, y1), (x2, y2), (0, 200, 0), 2)
-        cv2.putText(
-            annotated, label, (x1, max(y1 - 4, 12)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 200, 0), 1
-        )
+        cv2.putText(annotated, label, (x1, max(y1 - 4, 12)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 200, 0), 1)
     return annotated
