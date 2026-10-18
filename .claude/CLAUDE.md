@@ -2,7 +2,8 @@
 
 ## Workflow
 
-Work on a branch from `main` and open one pull request per concern. Every commit carries
+Work on a branch from `main`. Batch related changes into one pull request with one commit per
+concern; open a separate one only for a change that must merge on its own. Every commit carries
 `Signed-off-by` (DCO): always pass `-s` to `git commit` (Git has no setting that adds it
 automatically) and check the trailer with `git log --format=%(trailers)` before pushing. Never put
 `Co-Authored-By` or `Claude-Session` lines in a commit message. Never copy code from
