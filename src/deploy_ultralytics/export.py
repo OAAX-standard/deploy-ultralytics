@@ -12,7 +12,7 @@ class ExportError(Exception):
     pass
 
 
-def export_model(model_name, output_dir, imgsz=DEFAULT_IMGSZ):
+def export_model(model_name: str, output_dir: str | Path, imgsz: int = DEFAULT_IMGSZ) -> tuple[Path, Path]:
     """Export an Ultralytics detection model to ONNX and write its model manifest.
 
     Returns the paths of the exported model and the manifest.
@@ -47,7 +47,7 @@ def export_model(model_name, output_dir, imgsz=DEFAULT_IMGSZ):
     return exported_path, manifest_path
 
 
-def _input_name(onnx_path):
+def _input_name(onnx_path: Path) -> str:
     import onnx
 
     return onnx.load(onnx_path).graph.input[0].name

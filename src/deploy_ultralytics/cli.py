@@ -9,7 +9,7 @@ _SUBCOMMANDS = {
 }
 
 
-def main(argv=None):
+def main(argv: list[str] | None = None) -> int:
     args = _build_parser().parse_args(argv)
     if args.command is None:
         _build_parser().print_help()
@@ -23,7 +23,7 @@ def main(argv=None):
     return _detect(args)
 
 
-def _export(args):
+def _export(args: argparse.Namespace) -> int:
     from deploy_ultralytics.export import ExportError, export_model
 
     try:
@@ -36,7 +36,7 @@ def _export(args):
     return 0
 
 
-def _fetch(args):
+def _fetch(args: argparse.Namespace) -> int:
     from deploy_ultralytics.fetch import FetchError, fetch_target
     from deploy_ultralytics.target import TargetError
 
@@ -50,7 +50,7 @@ def _fetch(args):
     return 0
 
 
-def _convert(args):
+def _convert(args: argparse.Namespace) -> int:
     from deploy_ultralytics.convert import ConvertError, convert_model
     from deploy_ultralytics.target import TargetError
 
@@ -64,7 +64,7 @@ def _convert(args):
     return 0
 
 
-def _detect(args):
+def _detect(args: argparse.Namespace) -> int:
     from deploy_ultralytics.detect import DetectError, detect_image
     from deploy_ultralytics.target import TargetError
 
@@ -78,7 +78,7 @@ def _detect(args):
     return 0
 
 
-def _build_parser():
+def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="deploy-ultralytics",
         description="Run Ultralytics YOLO models on several accelerators through OAAX.",
@@ -97,24 +97,24 @@ def _build_parser():
     return parser
 
 
-def _add_export_arguments(subparser):
+def _add_export_arguments(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument("model", help="Ultralytics detection model name, e.g. yolov8n")
     subparser.add_argument("--imgsz", type=int, default=640, help="input resolution (default: 640)")
     subparser.add_argument("--output", default=".", help="output directory (default: current)")
 
 
-def _add_fetch_arguments(subparser):
+def _add_fetch_arguments(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument("target", help="target to fetch the runtime and toolchain for, e.g. cpu")
     subparser.add_argument("--output", default=".", help="output directory (default: current)")
 
 
-def _add_convert_arguments(subparser):
+def _add_convert_arguments(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument("model", help="exported model to convert, e.g. yolov8n.onnx")
     subparser.add_argument("--target", required=True, help="target to convert for, e.g. cpu")
     subparser.add_argument("--output", default=".", help="output directory (default: current)")
 
 
-def _add_detect_arguments(subparser):
+def _add_detect_arguments(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument("image", help="image to run detection on")
     subparser.add_argument("--target", required=True, help="target to run on, e.g. cpu")
     subparser.add_argument("--model", required=True, help="converted model to load")
