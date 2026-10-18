@@ -44,9 +44,7 @@ def letterbox(image, size):
 def to_input_tensor(image, target):
     """Turn a letterboxed BGR image into the tensor the target's runtime expects."""
     rgb = image[:, :, ::-1].astype(np.float32)
-    normalized = (rgb - np.array(target.mean, dtype=np.float32)) / np.array(
-        target.std, dtype=np.float32
-    )
+    normalized = (rgb - np.array(target.mean, dtype=np.float32)) / np.array(target.std, dtype=np.float32)
     if target.layout == "NCHW":
         normalized = normalized.transpose(2, 0, 1)
     return np.ascontiguousarray(normalized[np.newaxis].astype(target.element_type))

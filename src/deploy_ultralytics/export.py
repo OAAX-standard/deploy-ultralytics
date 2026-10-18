@@ -19,9 +19,7 @@ def export_model(model_name, output_dir, imgsz=DEFAULT_IMGSZ):
     """
     model = YOLO(model_name)
     if model.task != "detect":
-        raise ExportError(
-            f"{model_name} has task '{model.task}'; export supports only 'detect' models"
-        )
+        raise ExportError(f"{model_name} has task '{model.task}'; export supports only 'detect' models")
 
     produced = Path(
         model.export(

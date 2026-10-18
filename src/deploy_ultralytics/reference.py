@@ -1,6 +1,6 @@
 """Regenerate the reference detections: what Ultralytics itself predicts for a model and image.
 
-    python -m deploy_ultralytics.reference yolov8n.pt fixtures/test-image.jpg
+python -m deploy_ultralytics.reference yolov8n.pt fixtures/test-image.jpg
 """
 
 import argparse
