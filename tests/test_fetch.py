@@ -7,7 +7,10 @@ import tarfile
 import pytest
 from helpers import run
 
-ARTIFACTS_ENV_VAR = "DEPLOY_ULTRALYTICS_ARTIFACTS"
+from deploy_ultralytics.fetch import ARTIFACTS_ENV_VAR
+from deploy_ultralytics.target import load_target
+
+CPU = load_target("cpu")
 
 
 @pytest.fixture
@@ -16,7 +19,7 @@ def artifacts(tmp_path):
     if (platform.system(), platform.machine()) != ("Linux", "x86_64"):
         pytest.skip("the local artifact layout in this test is for the Linux x86_64 runtime")
     store = tmp_path / "store"
-    archive = store / "runtimes" / "2.0.0" / "CPU" / "x86_64" / "Ubuntu" / "library.tar.gz"
+    archive = store / "runtimes" / CPU.version / CPU.vendor / "x86_64" / "Ubuntu" / "library.tar.gz"
     archive.parent.mkdir(parents=True)
     content = b"not really a shared library"
     with tarfile.open(archive, "w:gz") as tar:
@@ -31,7 +34,7 @@ def with_store(store):
 
 
 def test_fetch_places_the_runtime_and_loads_the_toolchain_image(tmp_path, artifacts, toolchain_image):
-    image_archive = artifacts / "conversion-toolchain" / "2.0.0" / "CPU" / "oaax-cpu-toolchain.tar"
+    image_archive = artifacts / "conversion-toolchain" / CPU.version / CPU.vendor / "oaax-cpu-toolchain.tar"
     image_archive.parent.mkdir(parents=True)
     with image_archive.open("wb") as out:
         subprocess.run(["docker", "save", toolchain_image], stdout=out, check=True)
