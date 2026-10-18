@@ -44,9 +44,6 @@ explicit = true
 torch = { index = "pytorch-cpu" }
 torchvision = { index = "pytorch-cpu" }
 
-[dependency-groups]
-dev = ["pytest>=7"]
-
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra"
