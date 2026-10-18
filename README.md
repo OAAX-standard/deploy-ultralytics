@@ -1,5 +1,7 @@
 # deploy-ultralytics
 
+[![CI](https://github.com/OAAX-standard/deploy-ultralytics/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/OAAX-standard/deploy-ultralytics/actions/workflows/ci.yml)
+
 Run an Ultralytics YOLO detection model on several AI accelerators through
 [OAAX](https://github.com/OAAX-standard). The inference program is the same for every accelerator;
 only the conversion step differs.
