@@ -147,6 +147,11 @@ The boxes Ultralytics itself predicts for the test image are committed under
 [`fixtures/`](fixtures/README.md), with the command that regenerates them. Each target's `detect`
 output is judged against them.
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## License
 
-Apache-2.0. Ultralytics is called as a dependency only; none of its code is copied here.
+Apache License 2.0 — see [LICENSE](LICENSE). Ultralytics is called as a dependency only; none of
+its code is copied here.
