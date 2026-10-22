@@ -7,6 +7,7 @@ import tempfile
 import urllib.error
 import urllib.request
 from pathlib import Path
+from typing import IO
 
 from deploy_ultralytics.target import load_target
 
@@ -21,7 +22,7 @@ class FetchError(Exception):
     pass
 
 
-def fetch_target(target_name, output_dir):
+def fetch_target(target_name: str, output_dir: str | Path) -> Path:
     """Download a target's runtime and toolchain image from the OAAX release artifact store.
 
     The runtime is placed in `<output_dir>/runtimes/<target>/` and the toolchain image is
@@ -42,7 +43,7 @@ def fetch_target(target_name, output_dir):
     return library
 
 
-def _place_runtime(store, path, directory):
+def _place_runtime(store: str, path: str, directory: Path) -> Path:
     with _download(store, path) as archive:
         directory.mkdir(parents=True, exist_ok=True)
         with tarfile.open(archive.name) as tar:
@@ -56,7 +57,7 @@ def _place_runtime(store, path, directory):
     return library
 
 
-def _load_toolchain(store, path, image):
+def _load_toolchain(store: str, path: str, image: str) -> None:
     with _download(store, path) as archive:
         loaded = subprocess.run(["docker", "load"], stdin=archive, capture_output=True, text=True)
     if loaded.returncode != 0:
@@ -65,7 +66,7 @@ def _load_toolchain(store, path, image):
         raise FetchError(f"{path} did not provide the image {image} the target expects")
 
 
-def _download(store, path):
+def _download(store: str, path: str) -> IO[bytes]:
     """Return a temporary file holding `path` under `store`, a local directory or an URL."""
     source = f"{store.rstrip('/')}/{path}"
     destination = tempfile.NamedTemporaryFile()
@@ -79,7 +80,7 @@ def _download(store, path):
     except (urllib.error.URLError, OSError) as error:
         destination.close()
         raise FetchError(
-            f"cannot get {source}: {error}; until OAAX 2.0 is published, "
+            f"cannot get {source}: {error}; to use another store, "
             f"point {ARTIFACTS_ENV_VAR} at a local directory or URL holding {path}"
         ) from error
     destination.flush()

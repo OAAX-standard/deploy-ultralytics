@@ -1,0 +1,26 @@
+# Skip generated directories for all hooks.
+exclude: ^\.venv/
+
+repos:
+  # ── General file hygiene ─────────────────────────────────────────────────────
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: '\.md$'          # preserve intentional trailing spaces in Markdown
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=512]
+
+  # ── Python: ruff (lint + format) ─────────────────────────────────────────────
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.17.1
+    hooks:
+      - id: ruff-check    # lint, with auto-fix
+        args: [--fix]
+      - id: ruff-format   # format (black-compatible)

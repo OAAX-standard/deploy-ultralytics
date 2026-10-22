@@ -7,7 +7,10 @@ import tarfile
 import pytest
 from helpers import run
 
-ARTIFACTS_ENV_VAR = "DEPLOY_ULTRALYTICS_ARTIFACTS"
+from deploy_ultralytics.fetch import ARTIFACTS_ENV_VAR
+from deploy_ultralytics.target import load_target
+
+CPU = load_target("cpu")
 
 
 @pytest.fixture
@@ -16,7 +19,7 @@ def artifacts(tmp_path):
     if (platform.system(), platform.machine()) != ("Linux", "x86_64"):
         pytest.skip("the local artifact layout in this test is for the Linux x86_64 runtime")
     store = tmp_path / "store"
-    archive = store / "runtimes" / "2.0.0" / "CPU" / "x86_64" / "Ubuntu" / "library.tar.gz"
+    archive = store / "runtimes" / CPU.version / CPU.vendor / "x86_64" / "Ubuntu" / "library.tar.gz"
     archive.parent.mkdir(parents=True)
     content = b"not really a shared library"
     with tarfile.open(archive, "w:gz") as tar:
@@ -30,22 +33,27 @@ def with_store(store):
     return {**os.environ, ARTIFACTS_ENV_VAR: str(store)}
 
 
-def test_fetch_places_the_runtime_and_loads_the_toolchain_image(
-    tmp_path, artifacts, toolchain_image
-):
-    image_archive = artifacts / "conversion-toolchain" / "2.0.0" / "CPU" / "oaax-cpu-toolchain.tar"
+def test_fetch_places_the_runtime_and_loads_the_toolchain_image(tmp_path, artifacts, toolchain_image):
+    image_archive = artifacts / "conversion-toolchain" / CPU.version / CPU.vendor / "oaax-cpu-toolchain.tar"
     image_archive.parent.mkdir(parents=True)
     with image_archive.open("wb") as out:
         subprocess.run(["docker", "save", toolchain_image], stdout=out, check=True)
+    # Untag the image so fetch has to load it, but keep its layers under a second tag so the
+    # developer's image comes back whatever fetch does.
+    backup = f"{toolchain_image}-fetch-test"
+    subprocess.run(["docker", "tag", toolchain_image, backup], check=True)
     subprocess.run(["docker", "rmi", toolchain_image], check=True, capture_output=True)
-
-    result = run(tmp_path, "fetch", "cpu", "--output", str(tmp_path / "out"), env=with_store(artifacts))
+    try:
+        result = run(tmp_path, "fetch", "cpu", "--output", str(tmp_path / "out"), env=with_store(artifacts))
+        loaded = subprocess.run(["docker", "image", "inspect", toolchain_image], capture_output=True)
+    finally:
+        subprocess.run(["docker", "tag", backup, toolchain_image], check=True)
+        subprocess.run(["docker", "rmi", backup], check=True, capture_output=True)
 
     assert result.returncode == 0, result.stderr
     library = tmp_path / "out" / "runtimes" / "cpu" / "libRuntimeLibrary.so"
     assert library.read_bytes() == b"not really a shared library"
     assert str(library) in result.stdout
-    loaded = subprocess.run(["docker", "image", "inspect", toolchain_image], capture_output=True)
     assert loaded.returncode == 0
 
 

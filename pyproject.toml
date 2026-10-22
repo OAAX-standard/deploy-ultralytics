@@ -44,9 +44,23 @@ explicit = true
 torch = { index = "pytorch-cpu" }
 torchvision = { index = "pytorch-cpu" }
 
-[dependency-groups]
-dev = ["pytest>=7"]
-
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra"
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes (unused imports, undefined names, …)
+    "I",   # isort (import ordering)
+    "UP",  # pyupgrade (modernise syntax)
+    "B",   # flake8-bugbear (common bug patterns)
+]
+ignore = [
+    "E501",  # line-too-long — enforced by ruff-format instead
+]

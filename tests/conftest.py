@@ -5,6 +5,9 @@ from pathlib import Path
 import pytest
 from helpers import run
 
+from deploy_ultralytics.detect import RUNTIME_ENV_VAR
+from deploy_ultralytics.target import load_target
+
 
 @pytest.fixture(scope="session")
 def source_models_dir(tmp_path_factory):
@@ -14,10 +17,10 @@ def source_models_dir(tmp_path_factory):
 
 @pytest.fixture(scope="session")
 def runtime():
-    path = os.environ.get("DEPLOY_ULTRALYTICS_RUNTIME")
+    path = os.environ.get(RUNTIME_ENV_VAR)
     if not path:
-        pytest.skip("DEPLOY_ULTRALYTICS_RUNTIME is not set: no runtime to run detect with")
-    assert Path(path).is_file(), f"DEPLOY_ULTRALYTICS_RUNTIME={path} is not a file"
+        pytest.skip(f"{RUNTIME_ENV_VAR} is not set: no runtime to run detect with")
+    assert Path(path).is_file(), f"{RUNTIME_ENV_VAR}={path} is not a file"
     return Path(path)
 
 
@@ -29,21 +32,16 @@ def exported_model(source_models_dir, tmp_path_factory):
     return out / "yolov8n.onnx"
 
 
-TOOLCHAIN_IMAGE = "oaax-cpu-toolchain:2.0.0"
+TOOLCHAIN_IMAGE = load_target("cpu").toolchain_image
 
 
 @pytest.fixture(scope="session")
 def toolchain_image():
-    """The CPU toolchain image, built from the `oaax-v2` branch of reference-implementation."""
+    """The CPU toolchain image, loaded by `deploy-ultralytics fetch cpu`."""
     try:
-        found = subprocess.run(
-            ["docker", "image", "inspect", TOOLCHAIN_IMAGE], capture_output=True
-        ).returncode == 0
+        found = subprocess.run(["docker", "image", "inspect", TOOLCHAIN_IMAGE], capture_output=True).returncode == 0
     except FileNotFoundError:
         found = False
     if not found:
-        pytest.skip(
-            f"toolchain image {TOOLCHAIN_IMAGE} is not in Docker: build it with "
-            "conversion-toolchain/build-toolchain.sh from the oaax-v2 branch of reference-implementation"
-        )
+        pytest.skip(f"toolchain image {TOOLCHAIN_IMAGE} is not in Docker: run `deploy-ultralytics fetch cpu`")
     return TOOLCHAIN_IMAGE

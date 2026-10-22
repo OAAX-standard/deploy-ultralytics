@@ -1,11 +1,13 @@
 import numpy as np
 
+from deploy_ultralytics.preprocess import Letterbox
+
 CONFIDENCE_THRESHOLD = 0.25
 NMS_IOU_THRESHOLD = 0.7
 MAX_DETECTIONS = 300
 
 
-def decode(output, letterbox_, image_shape):
+def decode(output: np.ndarray, letterbox_: Letterbox, image_shape: tuple[int, ...]) -> list[dict]:
     """Turn a `(1, 4 + num_classes, N)` output into detections in original-image pixels.
 
     Returns a list of `{"box": [x1, y1, x2, y2], "class": int, "score": float}`, best score first.
@@ -29,11 +31,11 @@ def decode(output, letterbox_, image_shape):
             "class": int(cls),
             "score": round(float(score), 3),
         }
-        for box, cls, score in zip(original, classes[kept], scores[kept])
+        for box, cls, score in zip(original, classes[kept], scores[kept], strict=True)
     ]
 
 
-def non_max_suppression(boxes, scores, classes, iou_threshold):
+def non_max_suppression(boxes: np.ndarray, scores: np.ndarray, classes: np.ndarray, iou_threshold: float) -> np.ndarray:
     """Indices of the boxes to keep, best score first; boxes only suppress the same class."""
     order = scores.argsort()[::-1]
     kept = []
@@ -46,7 +48,7 @@ def non_max_suppression(boxes, scores, classes, iou_threshold):
     return np.array(kept, dtype=int)
 
 
-def _iou(box, others):
+def _iou(box: np.ndarray, others: np.ndarray) -> np.ndarray:
     top_left = np.maximum(box[:2], others[:, :2])
     bottom_right = np.minimum(box[2:], others[:, 2:])
     intersection = np.prod((bottom_right - top_left).clip(0), axis=1)

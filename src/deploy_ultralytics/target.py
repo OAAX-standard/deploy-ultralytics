@@ -22,8 +22,8 @@ class TargetConfig:
 
     element_type: str
     layout: str
-    mean: tuple
-    std: tuple
+    mean: tuple[float, ...]
+    std: tuple[float, ...]
     iou_threshold: float
     store_url: str
     version: str
@@ -32,7 +32,7 @@ class TargetConfig:
     converted_model_extension: str
 
 
-def load_target(name):
+def load_target(name: str) -> TargetConfig:
     path = TARGETS_DIR / name / "target.json"
     if not path.is_file():
         known = sorted(p.name for p in TARGETS_DIR.iterdir() if (p / "target.json").is_file())
