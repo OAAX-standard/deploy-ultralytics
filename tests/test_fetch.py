@@ -11,21 +11,28 @@ from deploy_ultralytics.fetch import ARTIFACTS_ENV_VAR
 from deploy_ultralytics.target import load_target
 
 CPU = load_target("cpu")
+RUNTIME_ARCHIVE = {
+    "lib/libRuntimeLibrary.so": b"not really a shared library",
+    "lib/libdependency.so": b"a library the runtime needs",
+}
 
 
 @pytest.fixture
 def artifacts(tmp_path):
-    """A local stand-in for the OAAX release artifact store, with the CPU runtime only."""
+    """A local stand-in for the OAAX release artifact store, with the CPU runtime only.
+
+    The runtime archive keeps the runtime in a subdirectory, next to a library it depends on.
+    """
     if (platform.system(), platform.machine()) != ("Linux", "x86_64"):
         pytest.skip("the local artifact layout in this test is for the Linux x86_64 runtime")
     store = tmp_path / "store"
     archive = store / "runtimes" / CPU.version / CPU.vendor / "x86_64" / "Ubuntu" / "library.tar.gz"
     archive.parent.mkdir(parents=True)
-    content = b"not really a shared library"
     with tarfile.open(archive, "w:gz") as tar:
-        info = tarfile.TarInfo("./libRuntimeLibrary.so")
-        info.size = len(content)
-        tar.addfile(info, io.BytesIO(content))
+        for name, content in RUNTIME_ARCHIVE.items():
+            info = tarfile.TarInfo(f"./{name}")
+            info.size = len(content)
+            tar.addfile(info, io.BytesIO(content))
     return store
 
 
@@ -51,9 +58,10 @@ def test_fetch_places_the_runtime_and_loads_the_toolchain_image(tmp_path, artifa
         subprocess.run(["docker", "rmi", backup], check=True, capture_output=True)
 
     assert result.returncode == 0, result.stderr
-    library = tmp_path / "out" / "runtimes" / "cpu" / "libRuntimeLibrary.so"
-    assert library.read_bytes() == b"not really a shared library"
-    assert str(library) in result.stdout
+    placed = tmp_path / "out" / "runtimes" / "cpu"
+    for name, content in RUNTIME_ARCHIVE.items():
+        assert (placed / name).read_bytes() == content
+    assert str(placed / "lib" / "libRuntimeLibrary.so") in result.stdout
     assert loaded.returncode == 0
 
 

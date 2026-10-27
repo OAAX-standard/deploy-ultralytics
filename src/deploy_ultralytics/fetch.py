@@ -44,17 +44,16 @@ def fetch_target(target_name: str, output_dir: str | Path) -> Path:
 
 
 def _place_runtime(store: str, path: str, directory: Path) -> Path:
+    """Extract the whole runtime archive, so the runtime finds the libraries shipped beside it."""
     with _download(store, path) as archive:
         directory.mkdir(parents=True, exist_ok=True)
         with tarfile.open(archive.name) as tar:
-            members = [m for m in tar.getmembers() if Path(m.name).name == RUNTIME_FILE_NAME]
-            if len(members) != 1:
-                raise FetchError(f"{path} does not hold exactly one {RUNTIME_FILE_NAME}")
-            library = directory / RUNTIME_FILE_NAME
-            with tar.extractfile(members[0]) as source, library.open("wb") as destination:
-                shutil.copyfileobj(source, destination)
-    library.chmod(0o755)
-    return library
+            tar.extractall(directory, filter="data")
+    libraries = list(directory.rglob(RUNTIME_FILE_NAME))
+    if len(libraries) != 1:
+        raise FetchError(f"{path} does not hold exactly one {RUNTIME_FILE_NAME}")
+    libraries[0].chmod(0o755)
+    return libraries[0]
 
 
 def _load_toolchain(store: str, path: str, image: str) -> None:
