@@ -30,7 +30,7 @@ deploy-ultralytics = "deploy_ultralytics.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-deploy_ultralytics = ["targets/*/*"]
+deploy_ultralytics = ["targets/*/*", "targets/*/bundle/*"]
 
 # Nothing here runs torch on a GPU: export runs on CPU and inference goes through OAAX runtimes.
 # The CPU build spares every install the CUDA wheels, several GB. uv applies sources only to

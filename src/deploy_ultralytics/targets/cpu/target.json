@@ -10,6 +10,7 @@
   },
   "toolchain": {
     "image": "oaax-cpu-toolchain:2.0.0",
+    "input": "model",
     "converted_model_extension": "onnx"
   }
 }

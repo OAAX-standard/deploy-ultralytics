@@ -1,0 +1,16 @@
+{
+  "element_type": "float32",
+  "layout": "NCHW",
+  "normalization": { "mean": [0, 0, 0], "std": [255, 255, 255] },
+  "iou_threshold": 0.9,
+  "source": {
+    "store_url": "https://oaax.nbg1.your-objectstorage.com",
+    "version": "2.0.0",
+    "vendor": "INTEL"
+  },
+  "toolchain": {
+    "image": "oaax-intel-toolchain:2.0.0",
+    "input": "bundle",
+    "converted_model_extension": "zip"
+  }
+}
