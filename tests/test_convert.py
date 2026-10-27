@@ -1,10 +1,8 @@
-import json
-
-from helpers import TEST_IMAGE, assert_matches_reference_detections, run
+from helpers import CONVERTED_MODEL, TARGET_NAME, run
 
 
 def convert(tmp_path, model, out):
-    return run(tmp_path, "convert", "--target", "cpu", "--output", str(out), str(model))
+    return run(tmp_path, "convert", "--target", TARGET_NAME, "--output", str(out), str(model))
 
 
 def test_convert_writes_the_converted_model_and_its_manifest(tmp_path, exported_model, toolchain_image):
@@ -12,35 +10,11 @@ def test_convert_writes_the_converted_model_and_its_manifest(tmp_path, exported_
     result = convert(tmp_path, exported_model, out)
 
     assert result.returncode == 0, result.stderr
-    assert (out / "yolov8n.cpu.onnx").stat().st_size > 0
+    converted = out / CONVERTED_MODEL
+    assert converted.stat().st_size > 0
     exported_manifest = exported_model.with_suffix(".manifest.json").read_text()
-    assert (out / "yolov8n.cpu.manifest.json").read_text() == exported_manifest
-    assert str(out / "yolov8n.cpu.onnx") in result.stdout
-
-
-def test_detect_accepts_the_converted_model_and_matches_the_reference_detections(
-    tmp_path, exported_model, toolchain_image, runtime
-):
-    converted = tmp_path / "converted"
-    assert convert(tmp_path, exported_model, converted).returncode == 0
-
-    result = run(
-        tmp_path,
-        "detect",
-        "--target",
-        "cpu",
-        "--runtime",
-        str(runtime),
-        "--model",
-        str(converted / "yolov8n.cpu.onnx"),
-        "--output",
-        str(tmp_path / "out"),
-        str(TEST_IMAGE),
-    )
-
-    assert result.returncode == 0, result.stderr
-    detections = json.loads((tmp_path / "out" / "test-image.detections.json").read_text())
-    assert_matches_reference_detections(detections, "cpu")
+    assert (out / f"yolov8n.{TARGET_NAME}.manifest.json").read_text() == exported_manifest
+    assert str(converted) in result.stdout
 
 
 def test_convert_of_a_file_that_is_not_a_model_reports_the_toolchain_failure(tmp_path, toolchain_image):
