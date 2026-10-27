@@ -53,6 +53,8 @@ jobs:
       # The detect and convert tests skip when the runtime or toolchain is missing; in CI that
       # would hide a broken fetch, so any skipped test fails the job.
       - name: Run the test suite
+        # An explicit bash shell adds pipefail, so a pytest failure is not lost in the tee.
+        shell: bash
         run: |
           uv run pytest -rs | tee pytest.log
           if grep -q '^SKIPPED' pytest.log; then
