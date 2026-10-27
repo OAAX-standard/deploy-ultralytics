@@ -6,8 +6,8 @@ Run an Ultralytics YOLO detection model on several AI accelerators through
 [OAAX](https://github.com/OAAX-standard). The inference program is the same for every accelerator;
 only the conversion step differs.
 
-> Status: the CI workflow runs the CPU path (fetch, export, convert, detect) on every push. `detect`'s
-> check of the runtime's reported input is pending, so no target is verified yet; see
+> Status: on every push, CI runs the Walkthrough and the test suite of the CPU and Intel targets.
+> `detect`'s check of the runtime's reported input is pending, so no target is verified yet; see
 > [Targets](#targets).
 
 ## Walkthrough
@@ -52,9 +52,10 @@ deploy-ultralytics fetch cpu
 ```
 
 `fetch` downloads a target's runtime archive and toolchain image archive from the OAAX release
-artifact store, places the runtime at `runtimes/cpu/libRuntimeLibrary.so` (under `--output`,
-default: the current directory) and loads the toolchain image into Docker. The store URL, the
-version and the vendor come from the target's `target.json`.
+artifact store. It extracts the runtime archive into `runtimes/cpu/` (under `--output`, default:
+the current directory) and prints the path of `libRuntimeLibrary.so` in it. It loads the toolchain
+image into Docker and tags the image with the name in the target's `target.json`. The store URL,
+the version and the vendor also come from `target.json`.
 
 To use another store, set `DEPLOY_ULTRALYTICS_ARTIFACTS` to a local directory or a URL laid out
 the same way:
@@ -64,8 +65,8 @@ runtimes/2.0.0/CPU/x86_64/Ubuntu/library.tar.gz
 conversion-toolchain/2.0.0/CPU/oaax-cpu-toolchain.tar
 ```
 
-The runtime archive holds `libRuntimeLibrary.so`; the toolchain archive is the output of
-`docker save` of the toolchain image.
+The runtime archive holds `libRuntimeLibrary.so` and the libraries it loads, at any depth. The
+toolchain archive is the output of `docker save` of the toolchain image, under any tag.
 
 ## Convert
 
@@ -77,6 +78,10 @@ deploy-ultralytics convert yolov8n.onnx --target cpu --output converted
 to the output directory as `yolov8n.cpu.onnx`, with the model manifest copied beside it as
 `yolov8n.cpu.manifest.json`; that is where `detect` looks for it. The command needs the toolchain
 image in Docker, from `fetch`.
+
+Some toolchains take a bundle, not the bare exported model. If `toolchain.input` in the target's
+`target.json` is `bundle`, `convert` puts the exported model and the files of the target's
+`bundle/` directory in a zip, and runs the toolchain on that zip.
 
 ## Detect
 
@@ -105,14 +110,14 @@ the variable is not set.
 | Target | Status  |
 | ------ | ------- |
 | [CPU](src/deploy_ultralytics/targets/cpu/README.md#walkthrough) | export -> convert -> detect runs in CI; detect's input check is pending (see below) |
-| [Intel](src/deploy_ultralytics/targets/intel/README.md#walkthrough) | pending |
+| [Intel](src/deploy_ultralytics/targets/intel/README.md#walkthrough) | export -> convert -> detect runs in CI; detect's input check is pending (see below) |
 | NVIDIA | pending |
 | DeepX  | pending |
 
 `detect` does not yet check the runtime's reported input shape and element type against the
 manifest and the target config: the PythonBindings the repository pins read that information from a
 `models` entry of the runtime's info JSON, which no OAAX 2.0 runtime emits. Until that is fixed
-upstream, CPU stays unverified.
+upstream, CPU and Intel stay unverified.
 
 ## Install
 

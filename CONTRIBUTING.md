@@ -36,4 +36,7 @@ uv run deploy-ultralytics fetch cpu
 export DEPLOY_ULTRALYTICS_RUNTIME=$PWD/runtimes/cpu/libRuntimeLibrary.so
 ```
 
+The tests use the cpu target. To test another target, fetch it and set
+`DEPLOY_ULTRALYTICS_TARGET` to its name, as the CI job for that target does.
+
 CI fails when any test is skipped.
