@@ -3,6 +3,11 @@ import os
 import platform
 import subprocess
 import tarfile
+import threading
+from contextlib import contextmanager
+from functools import partial
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 
 import pytest
 from helpers import TARGET, TARGET_NAME, run
@@ -61,9 +66,7 @@ def test_fetch_places_the_runtime_and_tags_the_loaded_toolchain_image(tmp_path, 
         subprocess.run(["docker", "rmi", vendor_tag], capture_output=True)
 
     assert result.returncode == 0, result.stderr
-    placed = tmp_path / "out" / "runtimes" / TARGET_NAME
-    for name, content in RUNTIME_ARCHIVE.items():
-        assert (placed / name).read_bytes() == content
+    placed = _assert_runtime_placed(tmp_path)
     assert str(placed / "lib" / "libRuntimeLibrary.so") in result.stdout
     assert loaded.returncode == 0
 
@@ -76,9 +79,76 @@ def test_fetch_names_the_missing_artifact(tmp_path, artifacts):
     assert ARTIFACTS_ENV_VAR in result.stderr
 
 
+def test_fetch_resumes_a_download_the_store_cuts_short(tmp_path, artifacts):
+    with _store_that_cuts_the_first_response_short(artifacts) as url:
+        result = run(tmp_path, "fetch", TARGET_NAME, "--output", str(tmp_path / "out"), env=with_store(url))
+
+    # This store has no toolchain archive: fetch gets that far only if it got the whole runtime.
+    assert TOOLCHAIN_ARCHIVE in result.stderr
+    _assert_runtime_placed(tmp_path)
+
+
+def test_fetch_refuses_a_resume_the_store_answers_from_the_start(tmp_path, artifacts):
+    with _store_that_cuts_the_first_response_short(artifacts, honours_range=False) as url:
+        result = run(tmp_path, "fetch", TARGET_NAME, "--output", str(tmp_path / "out"), env=with_store(url))
+
+    assert result.returncode != 0
+    assert "ignored the range request" in result.stderr
+
+
 def test_fetch_of_an_unknown_target_lists_the_known_ones(tmp_path):
     result = run(tmp_path, "fetch", "no-such-target")
 
     assert result.returncode != 0
     assert "unknown target 'no-such-target'" in result.stderr
     assert "cpu" in result.stderr
+
+
+class _CutShortHandler(SimpleHTTPRequestHandler):
+    """Serves the store, but ends the first response for each file after half of its bytes. A store
+    that does not honour ranges answers a range request with the whole file."""
+
+    def do_GET(self):
+        path = Path(self.translate_path(self.path))
+        if not path.is_file():
+            self.send_error(404)
+            return
+        data = path.read_bytes()
+        start = 0
+        if "Range" in self.headers and self.server.honours_range:
+            start = int(self.headers["Range"].removeprefix("bytes=").rstrip("-"))
+        self.send_response(206 if start else 200)
+        self.send_header("Content-Length", str(len(data) - start))
+        self.end_headers()
+        if path in self.server.cut:
+            self.wfile.write(data[start:])
+        else:
+            self.server.cut.add(path)
+            self.wfile.write(data[start : len(data) // 2])
+        self.close_connection = True
+
+    def log_message(self, *args):
+        pass
+
+
+@contextmanager
+def _store_that_cuts_the_first_response_short(store, honours_range=True):
+    handler = partial(_CutShortHandler, directory=str(store))
+    with ThreadingHTTPServer(("127.0.0.1", 0), handler) as server:
+        server.cut = set()
+        server.honours_range = honours_range
+        thread = threading.Thread(target=server.serve_forever)
+        thread.start()
+        try:
+            yield f"http://127.0.0.1:{server.server_port}"
+        finally:
+            server.shutdown()
+            thread.join()
+
+
+def _assert_runtime_placed(tmp_path):
+    """Every file of the runtime archive is under the target's runtime directory; returns that directory."""
+    placed = tmp_path / "out" / "runtimes" / TARGET_NAME
+    for name, content in RUNTIME_ARCHIVE.items():
+        assert (placed / name).read_bytes() == content
+    return placed

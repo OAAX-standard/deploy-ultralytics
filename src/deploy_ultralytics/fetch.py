@@ -17,6 +17,9 @@ RUNTIME_FILE_NAME = "libRuntimeLibrary.so"
 RUNTIME_ARCHITECTURE = "x86_64"
 RUNTIME_OPERATING_SYSTEM = "Ubuntu"
 
+# How many times a download resumes after the store ends a response before its Content-Length.
+RESUME_ATTEMPTS = 5
+
 
 class FetchError(Exception):
     pass
@@ -77,8 +80,7 @@ def _download(store: str, path: str) -> IO[bytes]:
     destination = tempfile.NamedTemporaryFile()
     try:
         if store.startswith(("http://", "https://")):
-            with urllib.request.urlopen(source) as response:
-                shutil.copyfileobj(response, destination)
+            _download_url(source, destination)
         else:
             with open(Path(store) / path, "rb") as local:
                 shutil.copyfileobj(local, destination)
@@ -91,3 +93,21 @@ def _download(store: str, path: str) -> IO[bytes]:
     destination.flush()
     destination.seek(0)
     return destination
+
+
+def _download_url(url: str, destination: IO[bytes]) -> None:
+    """Copy `url` into `destination`. The store can end a response early without an error, so a
+    download shorter than its Content-Length resumes with a range request."""
+    with urllib.request.urlopen(url) as response:
+        size = response.length
+        shutil.copyfileobj(response, destination)
+    for _ in range(RESUME_ATTEMPTS):
+        if size is None or destination.tell() >= size:
+            return
+        request = urllib.request.Request(url, headers={"Range": f"bytes={destination.tell()}-"})
+        with urllib.request.urlopen(request) as response:
+            if response.status != 206:
+                raise OSError(f"the store ignored the range request and answered {response.status}")
+            shutil.copyfileobj(response, destination)
+    if destination.tell() < size:
+        raise OSError(f"the store ended the download at {destination.tell()} of {size} bytes")
