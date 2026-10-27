@@ -12,26 +12,11 @@ only the conversion step differs.
 
 ## Walkthrough
 
-Once per machine, fetch the target's runtime and toolchain, and point `detect` at the runtime
-(`fetch` prints the exact line):
-
-```sh
-deploy-ultralytics fetch cpu
-export DEPLOY_ULTRALYTICS_RUNTIME=$PWD/runtimes/cpu/libRuntimeLibrary.so
-```
-
-Then three commands take a model from Ultralytics to boxes on an image:
-
-```sh
-deploy-ultralytics export yolov8n.pt
-deploy-ultralytics convert yolov8n.onnx --target cpu
-deploy-ultralytics detect --target cpu --model yolov8n.cpu.onnx fixtures/test-image.jpg
-```
-
-CI runs the three commands above, extracted from this file, after building the CPU runtime and
-toolchain from source. To run on another accelerator, change `--target` in `convert` and `detect`,
-and in `detect` also `--model`, which is that target's converted model (`yolov8n.<target>.<extension>`),
-and the runtime, which is that target's own. `export` and the exported model stay the same.
+The README of each target holds the Walkthrough for that target: the commands that take a model
+from Ultralytics to boxes on an image. The [Targets](#targets) table links each Walkthrough. CI
+runs each Walkthrough as written, in one job for each target. The commands differ between targets
+in the target name, the converted model and the runtime. `export` and the exported model stay the
+same.
 
 | Subcommand | What it does                                                          |
 | ---------- | --------------------------------------------------------------------- |
@@ -119,8 +104,8 @@ the variable is not set.
 
 | Target | Status  |
 | ------ | ------- |
-| CPU    | export -> convert -> detect runs in CI; detect's input check is pending (see below) |
-| Intel  | pending |
+| [CPU](src/deploy_ultralytics/targets/cpu/README.md#walkthrough) | export -> convert -> detect runs in CI; detect's input check is pending (see below) |
+| [Intel](src/deploy_ultralytics/targets/intel/README.md#walkthrough) | pending |
 | NVIDIA | pending |
 | DeepX  | pending |
 

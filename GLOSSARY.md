@@ -47,6 +47,12 @@ The boxes and classes Ultralytics itself produces for a source model on the test
 a fixture. Every target's `detect` output is judged against them.
 _Avoid_: Ground truth, golden output, baseline
 
+**Walkthrough**:
+The section of a target's README that lists the commands which take a model from Ultralytics to
+boxes on an image, in order. CI runs it as written, so it is the proof that the documented
+commands work.
+_Avoid_: Tutorial, quickstart, example commands
+
 **Target config**:
 The data file in a target's directory. It holds what conversion changes about the input (element
 type, layout, normalization), the toolchain image reference, whether the toolchain takes the
