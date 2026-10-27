@@ -11,16 +11,23 @@ for it (toolchain, input layout, calibration). One directory per target.
 _Avoid_: Vendor, backend, device, accelerator (when meaning the directory or its config)
 
 **Toolchain**:
-The OAAX program that converts an ONNX model into the form a target's runtime loads.
+The OAAX program that converts an ONNX model into the form a target's runtime loads. It takes
+either the exported model alone or a bundle, as its target requires.
 _Avoid_: Compiler, converter
+
+**Bundle**:
+A zip archive given to a toolchain in place of the bare exported model: the exported model plus
+the target's fixed toolchain settings (e.g. Intel's choice to keep FP32 inputs). Built anew for
+every conversion.
+_Avoid_: Archive, package, model zip
 
 **Runtime**:
 The OAAX shared library that loads a converted model and runs inference on a target.
 _Avoid_: Runtime library, backend
 
 **Converted model**:
-The toolchain's output for one model and one target (e.g. ONNX for CPU, OpenVINO IR for Intel,
-`.dxnn` for DeepX).
+The toolchain's output for one model and one target (e.g. ONNX for CPU, a zip of OpenVINO IR for
+Intel, `.dxnn` for DeepX).
 _Avoid_: Compiled model, artifact
 
 **Source model**:
@@ -42,7 +49,8 @@ _Avoid_: Ground truth, golden output, baseline
 
 **Target config**:
 The data file in a target's directory. It holds what conversion changes about the input (element
-type, layout, normalization), the toolchain image reference, where the runtime and toolchain come
-from, and the IoU threshold for matching reference detections. The input description defaults to
-the exported model's own input and the threshold to 0.9.
+type, layout, normalization), the toolchain image reference, whether the toolchain takes the
+exported model or a bundle, where the runtime and toolchain come from, and the IoU threshold for
+matching reference detections. The input description defaults to the exported model's own input
+and the threshold to 0.9.
 _Avoid_: Model config, preprocessing config
