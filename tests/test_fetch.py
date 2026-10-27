@@ -40,22 +40,26 @@ def with_store(store):
     return {**os.environ, ARTIFACTS_ENV_VAR: str(store)}
 
 
-def test_fetch_places_the_runtime_and_loads_the_toolchain_image(tmp_path, artifacts, toolchain_image):
+def test_fetch_places_the_runtime_and_tags_the_loaded_toolchain_image(tmp_path, artifacts, toolchain_image):
+    # The archive carries the image under the vendor's own tag, not the name in the target config.
+    vendor_tag = "oaax-fetch-test-vendor:latest"
     image_archive = artifacts / "conversion-toolchain" / CPU.version / CPU.vendor / "oaax-cpu-toolchain.tar"
     image_archive.parent.mkdir(parents=True)
+    subprocess.run(["docker", "tag", toolchain_image, vendor_tag], check=True)
     with image_archive.open("wb") as out:
-        subprocess.run(["docker", "save", toolchain_image], stdout=out, check=True)
+        subprocess.run(["docker", "save", vendor_tag], stdout=out, check=True)
     # Untag the image so fetch has to load it, but keep its layers under a second tag so the
     # developer's image comes back whatever fetch does.
     backup = f"{toolchain_image}-fetch-test"
     subprocess.run(["docker", "tag", toolchain_image, backup], check=True)
-    subprocess.run(["docker", "rmi", toolchain_image], check=True, capture_output=True)
+    subprocess.run(["docker", "rmi", toolchain_image, vendor_tag], check=True, capture_output=True)
     try:
         result = run(tmp_path, "fetch", "cpu", "--output", str(tmp_path / "out"), env=with_store(artifacts))
         loaded = subprocess.run(["docker", "image", "inspect", toolchain_image], capture_output=True)
     finally:
         subprocess.run(["docker", "tag", backup, toolchain_image], check=True)
         subprocess.run(["docker", "rmi", backup], check=True, capture_output=True)
+        subprocess.run(["docker", "rmi", vendor_tag], capture_output=True)
 
     assert result.returncode == 0, result.stderr
     placed = tmp_path / "out" / "runtimes" / "cpu"

@@ -57,12 +57,18 @@ def _place_runtime(store: str, path: str, directory: Path) -> Path:
 
 
 def _load_toolchain(store: str, path: str, image: str) -> None:
+    """Load the toolchain image and tag it with the target config's name, whatever tag the vendor gave it."""
     with _download(store, path) as archive:
         loaded = subprocess.run(["docker", "load"], stdin=archive, capture_output=True, text=True)
     if loaded.returncode != 0:
         raise FetchError(f"docker load of {path} failed: {loaded.stderr.strip()}")
-    if subprocess.run(["docker", "image", "inspect", image], capture_output=True).returncode != 0:
-        raise FetchError(f"{path} did not provide the image {image} the target expects")
+    # `docker load` prints "Loaded image: <name>", or "Loaded image ID: <id>" for an untagged image.
+    names = [line.split(": ", 1)[1] for line in loaded.stdout.splitlines() if line.startswith("Loaded image")]
+    if len(names) != 1:
+        raise FetchError(f"{path} holds {len(names)} images; expected the one toolchain image")
+    tagged = subprocess.run(["docker", "tag", names[0], image], capture_output=True, text=True)
+    if tagged.returncode != 0:
+        raise FetchError(f"cannot tag the image from {path} as {image}: {tagged.stderr.strip()}")
 
 
 def _download(store: str, path: str) -> IO[bytes]:
