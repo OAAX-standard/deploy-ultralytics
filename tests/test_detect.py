@@ -1,39 +1,39 @@
 import json
 import os
 
-from helpers import TEST_IMAGE, assert_matches_reference_detections, run
+from helpers import TARGET_NAME, TEST_IMAGE, assert_matches_reference_detections, run
 
 from deploy_ultralytics.detect import RUNTIME_ENV_VAR
 
 
-def detect(tmp_path, runtime, exported_model, out):
+def detect(tmp_path, runtime, converted_model, out):
     return run(
         tmp_path,
         "detect",
         "--target",
-        "cpu",
+        TARGET_NAME,
         "--runtime",
         str(runtime),
         "--model",
-        str(exported_model),
+        str(converted_model),
         "--output",
         str(out),
         str(TEST_IMAGE),
     )
 
 
-def test_detect_finds_every_reference_detection(tmp_path, runtime, exported_model):
+def test_detect_finds_every_reference_detection(tmp_path, runtime, converted_model):
     out = tmp_path / "out"
-    result = detect(tmp_path, runtime, exported_model, out)
+    result = detect(tmp_path, runtime, converted_model, out)
     assert result.returncode == 0, result.stderr
 
     detections = json.loads((out / "test-image.detections.json").read_text())
-    assert_matches_reference_detections(detections, "cpu")
+    assert_matches_reference_detections(detections)
 
 
-def test_detect_writes_the_annotated_image_and_the_json_where_asked(tmp_path, runtime, exported_model):
+def test_detect_writes_the_annotated_image_and_the_json_where_asked(tmp_path, runtime, converted_model):
     out = tmp_path / "somewhere" / "else"
-    result = detect(tmp_path, runtime, exported_model, out)
+    result = detect(tmp_path, runtime, converted_model, out)
     assert result.returncode == 0, result.stderr
     assert (out / "test-image.annotated.jpg").stat().st_size > 0
     detections = json.loads((out / "test-image.detections.json").read_text())
@@ -41,14 +41,14 @@ def test_detect_writes_the_annotated_image_and_the_json_where_asked(tmp_path, ru
     assert sorted(detections[0]) == ["box", "class", "score"]
 
 
-def test_runtime_can_come_from_the_environment(tmp_path, runtime, exported_model):
+def test_runtime_can_come_from_the_environment(tmp_path, runtime, converted_model):
     result = run(
         tmp_path,
         "detect",
         "--target",
-        "cpu",
+        TARGET_NAME,
         "--model",
-        str(exported_model),
+        str(converted_model),
         "--output",
         str(tmp_path / "out"),
         str(TEST_IMAGE),
@@ -64,7 +64,7 @@ def test_detect_without_a_runtime_says_how_to_provide_one(tmp_path):
         tmp_path,
         "detect",
         "--target",
-        "cpu",
+        TARGET_NAME,
         "--model",
         "model.onnx",
         str(TEST_IMAGE),
@@ -84,7 +84,7 @@ def test_detect_of_a_model_without_its_manifest_says_to_export_it_first(tmp_path
         tmp_path,
         "detect",
         "--target",
-        "cpu",
+        TARGET_NAME,
         "--runtime",
         str(runtime),
         "--model",

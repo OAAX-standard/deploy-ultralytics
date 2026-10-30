@@ -10,8 +10,15 @@ on:
 
 jobs:
   test:
+    name: test (${{ matrix.target }})
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [cpu, intel]
+    env:
+      DEPLOY_ULTRALYTICS_TARGET: ${{ matrix.target }}
     steps:
       - uses: actions/checkout@v4
 
@@ -31,21 +38,23 @@ jobs:
       - name: Install the package
         run: uv sync --locked --extra test
 
-      # The README's walkthrough is the proof that the documented commands work: run them as written.
+      # The target's Walkthrough is the proof that the documented commands work: run them as written.
       # Its fetch also provides the runtime and the toolchain image the test suite needs.
-      - name: Run the README walkthrough
+      - name: Run the target's Walkthrough
         run: |
-          sed -n '/^## Walkthrough/,/^## Export/p' README.md \
+          awk '/^## /{inside = ($0 == "## Walkthrough")} inside' src/deploy_ultralytics/targets/${{ matrix.target }}/README.md \
             | grep '^\(deploy-ultralytics \(fetch\|export\|convert\|detect\) \|export DEPLOY_ULTRALYTICS_RUNTIME=\)' > walkthrough.sh
           test "$(wc -l < walkthrough.sh)" -eq 5
           uv run bash -e -x walkthrough.sh
           test -s test-image.detections.json
           test -s test-image.annotated.jpg
-          echo "DEPLOY_ULTRALYTICS_RUNTIME=$PWD/runtimes/cpu/libRuntimeLibrary.so" >> "$GITHUB_ENV"
+          echo "DEPLOY_ULTRALYTICS_RUNTIME=$PWD/runtimes/${{ matrix.target }}/libRuntimeLibrary.so" >> "$GITHUB_ENV"
 
       # The detect and convert tests skip when the runtime or toolchain is missing; in CI that
       # would hide a broken fetch, so any skipped test fails the job.
       - name: Run the test suite
+        # An explicit bash shell adds pipefail, so a pytest failure is not lost in the tee.
+        shell: bash
         run: |
           uv run pytest -rs | tee pytest.log
           if grep -q '^SKIPPED' pytest.log; then

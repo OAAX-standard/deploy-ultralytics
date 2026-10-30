@@ -3,10 +3,9 @@ import subprocess
 from pathlib import Path
 
 import pytest
-from helpers import run
+from helpers import CONVERTED_MODEL, TARGET, TARGET_NAME, run
 
 from deploy_ultralytics.detect import RUNTIME_ENV_VAR
-from deploy_ultralytics.target import load_target
 
 
 @pytest.fixture(scope="session")
@@ -32,16 +31,23 @@ def exported_model(source_models_dir, tmp_path_factory):
     return out / "yolov8n.onnx"
 
 
-TOOLCHAIN_IMAGE = load_target("cpu").toolchain_image
-
-
 @pytest.fixture(scope="session")
 def toolchain_image():
-    """The CPU toolchain image, loaded by `deploy-ultralytics fetch cpu`."""
+    """The target's toolchain image, loaded by `deploy-ultralytics fetch <target>`."""
+    image = TARGET.toolchain_image
     try:
-        found = subprocess.run(["docker", "image", "inspect", TOOLCHAIN_IMAGE], capture_output=True).returncode == 0
+        found = subprocess.run(["docker", "image", "inspect", image], capture_output=True).returncode == 0
     except FileNotFoundError:
         found = False
     if not found:
-        pytest.skip(f"toolchain image {TOOLCHAIN_IMAGE} is not in Docker: run `deploy-ultralytics fetch cpu`")
-    return TOOLCHAIN_IMAGE
+        pytest.skip(f"toolchain image {image} is not in Docker: run `deploy-ultralytics fetch {TARGET_NAME}`")
+    return image
+
+
+@pytest.fixture(scope="session")
+def converted_model(exported_model, toolchain_image, tmp_path_factory):
+    """The exported model converted for the target, the only model its runtime loads."""
+    out = tmp_path_factory.mktemp("converted")
+    result = run(out, "convert", "--target", TARGET_NAME, "--output", str(out), str(exported_model))
+    assert result.returncode == 0, result.stderr
+    return out / CONVERTED_MODEL

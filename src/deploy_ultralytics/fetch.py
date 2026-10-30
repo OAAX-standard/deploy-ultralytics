@@ -17,6 +17,9 @@ RUNTIME_FILE_NAME = "libRuntimeLibrary.so"
 RUNTIME_ARCHITECTURE = "x86_64"
 RUNTIME_OPERATING_SYSTEM = "Ubuntu"
 
+# How many times a download resumes after the store ends a response before its Content-Length.
+RESUME_ATTEMPTS = 5
+
 
 class FetchError(Exception):
     pass
@@ -44,26 +47,31 @@ def fetch_target(target_name: str, output_dir: str | Path) -> Path:
 
 
 def _place_runtime(store: str, path: str, directory: Path) -> Path:
+    """Extract the whole runtime archive, so the runtime finds the libraries shipped beside it."""
     with _download(store, path) as archive:
         directory.mkdir(parents=True, exist_ok=True)
         with tarfile.open(archive.name) as tar:
-            members = [m for m in tar.getmembers() if Path(m.name).name == RUNTIME_FILE_NAME]
-            if len(members) != 1:
-                raise FetchError(f"{path} does not hold exactly one {RUNTIME_FILE_NAME}")
-            library = directory / RUNTIME_FILE_NAME
-            with tar.extractfile(members[0]) as source, library.open("wb") as destination:
-                shutil.copyfileobj(source, destination)
-    library.chmod(0o755)
-    return library
+            tar.extractall(directory, filter="data")
+    libraries = list(directory.rglob(RUNTIME_FILE_NAME))
+    if len(libraries) != 1:
+        raise FetchError(f"{path} does not hold exactly one {RUNTIME_FILE_NAME}")
+    libraries[0].chmod(0o755)
+    return libraries[0]
 
 
 def _load_toolchain(store: str, path: str, image: str) -> None:
+    """Load the toolchain image and tag it with the target config's name, whatever tag the vendor gave it."""
     with _download(store, path) as archive:
         loaded = subprocess.run(["docker", "load"], stdin=archive, capture_output=True, text=True)
     if loaded.returncode != 0:
         raise FetchError(f"docker load of {path} failed: {loaded.stderr.strip()}")
-    if subprocess.run(["docker", "image", "inspect", image], capture_output=True).returncode != 0:
-        raise FetchError(f"{path} did not provide the image {image} the target expects")
+    # `docker load` prints "Loaded image: <name>", or "Loaded image ID: <id>" for an untagged image.
+    names = [line.split(": ", 1)[1] for line in loaded.stdout.splitlines() if line.startswith("Loaded image")]
+    if len(names) != 1:
+        raise FetchError(f"{path} holds {len(names)} images; expected the one toolchain image")
+    tagged = subprocess.run(["docker", "tag", names[0], image], capture_output=True, text=True)
+    if tagged.returncode != 0:
+        raise FetchError(f"cannot tag the image from {path} as {image}: {tagged.stderr.strip()}")
 
 
 def _download(store: str, path: str) -> IO[bytes]:
@@ -72,8 +80,7 @@ def _download(store: str, path: str) -> IO[bytes]:
     destination = tempfile.NamedTemporaryFile()
     try:
         if store.startswith(("http://", "https://")):
-            with urllib.request.urlopen(source) as response:
-                shutil.copyfileobj(response, destination)
+            _download_url(source, destination)
         else:
             with open(Path(store) / path, "rb") as local:
                 shutil.copyfileobj(local, destination)
@@ -86,3 +93,21 @@ def _download(store: str, path: str) -> IO[bytes]:
     destination.flush()
     destination.seek(0)
     return destination
+
+
+def _download_url(url: str, destination: IO[bytes]) -> None:
+    """Copy `url` into `destination`. The store can end a response early without an error, so a
+    download shorter than its Content-Length resumes with a range request."""
+    with urllib.request.urlopen(url) as response:
+        size = response.length
+        shutil.copyfileobj(response, destination)
+    for _ in range(RESUME_ATTEMPTS):
+        if size is None or destination.tell() >= size:
+            return
+        request = urllib.request.Request(url, headers={"Range": f"bytes={destination.tell()}-"})
+        with urllib.request.urlopen(request) as response:
+            if response.status != 206:
+                raise OSError(f"the store ignored the range request and answered {response.status}")
+            shutil.copyfileobj(response, destination)
+    if destination.tell() < size:
+        raise OSError(f"the store ended the download at {destination.tell()} of {size} bytes")
