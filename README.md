@@ -89,11 +89,11 @@ Some toolchains take a bundle, not the bare exported model. If `toolchain.input`
 deploy-ultralytics detect --target cpu --runtime path/to/libRuntimeLibrary.so --model yolov8n.cpu.onnx --output out image.jpg
 ```
 
-`detect` loads the runtime through [PythonBindings](https://github.com/OAAX-standard/PythonBindings),
-loads the converted model, letterboxes the image to the model's input resolution, applies the
-target's input description (element type, layout, normalization), runs inference, decodes the
-`(1, 4 + num_classes, N)` output and applies non-maximum suppression on the host. It writes two
-files into the output directory (default: the current directory):
+`detect` loads the runtime through [PythonBindings](https://github.com/OAAX-standard/PythonBindings)
+(the `oaax` package), loads the converted model, letterboxes the image to the model's input
+resolution, applies the target's input description (element type, layout, normalization), runs
+inference, decodes the `(1, 4 + num_classes, N)` output and applies non-maximum suppression on the
+host. It writes two files into the output directory (default: the current directory):
 
 - `<image>.annotated.jpg`, the image with the boxes drawn.
 - `<image>.detections.json`, a list of `{"box": [x1, y1, x2, y2], "class": 0, "score": 0.855}` in
@@ -115,14 +115,13 @@ the variable is not set.
 | DeepX  | pending |
 
 `detect` does not yet check the runtime's reported input shape and element type against the
-manifest and the target config: the PythonBindings the repository pins read that information from a
-`models` entry of the runtime's info JSON, which no OAAX 2.0 runtime emits. Until that is fixed
-upstream, CPU and Intel stay unverified.
+manifest and the target config. `oaax` 0.1.1 reads that information from a `models` entry of the
+runtime's info JSON, and no OAAX 2.0 runtime emits that entry. Until upstream fixes this, CPU and
+Intel stay unverified.
 
 ## Install
 
-Requires Python 3.10 or newer and access to the
-[PythonBindings](https://github.com/OAAX-standard/PythonBindings) repository.
+Requires Python 3.10 or newer.
 
 ```sh
 pip install .

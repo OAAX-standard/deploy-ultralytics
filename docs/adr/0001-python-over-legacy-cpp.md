@@ -18,7 +18,7 @@ in one place.
 
 - The example depends on a private repository with no release; publishing `deploy-ultralytics`
   therefore depends on publishing PythonBindings.
-  *Amended 2026-10-30:* this consequence no longer holds. PythonBindings is public, and PyPI has
-  `oaax` 0.1.1. The example still pins PythonBindings to a git commit. The decision is unchanged.
+  *Amended 2026-10-30:* this consequence no longer holds. PythonBindings is public, and the example
+  depends on its release `oaax` 0.1.1 from PyPI. The decision is unchanged.
 - A C++ example, if wanted later, is a second client of the same export/convert pipeline, not a
   revival of the deleted code.
