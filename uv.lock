@@ -500,7 +500,7 @@ test = [
 [package.metadata]
 requires-dist = [
     { name = "numpy" },
-    { name = "oaax", git = "https://github.com/OAAX-standard/PythonBindings.git?rev=6cbdbb5435c61f86655ce31d12fa0432c23d32f9" },
+    { name = "oaax", specifier = "~=0.1.1" },
     { name = "onnx", specifier = ">=1.23.1" },
     { name = "onnxslim", specifier = ">=0.1.97" },
     { name = "opencv-python" },
@@ -1576,12 +1576,16 @@ wheels = [
 
 [[package]]
 name = "oaax"
-version = "0.1.0"
-source = { git = "https://github.com/OAAX-standard/PythonBindings.git?rev=6cbdbb5435c61f86655ce31d12fa0432c23d32f9#6cbdbb5435c61f86655ce31d12fa0432c23d32f9" }
+version = "0.1.1"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*'" },
     { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/bc/b6/3b78b7177bd4f3fcb1d87f49f42f7b4cde0b8f561c295c845cd1cd6b24f2/oaax-0.1.1.tar.gz", hash = "sha256:5ddbd290f6a96869ea90069b6f32f2eec1ddc5473573efd975af0cdcf68b49b9", size = 28612, upload-time = "2026-10-30T10:39:33.365Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/dd/5e/8fc7e9d52fb8207aca59876ea267cf02ab1ab398ff3ddbde8f325ec5363e/oaax-0.1.1-py3-none-any.whl", hash = "sha256:ebbd3f235f60595e2eea2d0a19952002f02a8fcd7ff3ac79439065d3b58eb227", size = 24096, upload-time = "2026-10-30T10:39:32.055Z" },
 ]
 
 [[package]]
