@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 from pathlib import Path
 
 import cv2
@@ -43,10 +44,16 @@ def detect_image(
     tensor = to_input_tensor(padded, target)
 
     from oaax import Runtime
+    from oaax.onnx_introspect import model_io
 
     with Runtime(library) as loaded:
         loaded.init({})
         model_id = loaded.load_model(model_path)
+        io, reason = model_io(loaded, model_id, model_path)
+        if io is None:
+            print(f"deploy-ultralytics detect: input check skipped: {reason}", file=sys.stderr)
+        else:
+            _check_input(io[0], manifest["input_name"], tensor, target_name)
         result = loaded.run(model_id, {manifest["input_name"]: tensor})
     detections = decode(result[0].data, box_mapping, image.shape)
 
@@ -67,6 +74,24 @@ def _runtime_path(option: str | None) -> str:
     if not Path(path).is_file():
         raise DetectError(f"runtime {path} does not exist")
     return path
+
+
+def _check_input(inputs, name: str, tensor: np.ndarray, target_name: str) -> None:
+    """Refuse a model whose input differs from the tensor the target config and the manifest give."""
+    spec = next((spec for spec in inputs if spec.name == name), None)
+    if spec is None:
+        raise DetectError(f"the model has no input '{name}' named in its manifest; it has {[s.name for s in inputs]}")
+    element_type = spec.dtype.name if spec.dtype is not None else spec.element_type
+    if element_type != tensor.dtype.name:
+        raise DetectError(
+            f"the model's input '{name}' has element type {element_type}; "
+            f"target config '{target_name}' gives {tensor.dtype.name}"
+        )
+    if list(spec.shape) != list(tensor.shape):
+        raise DetectError(
+            f"the model's input '{name}' has shape {list(spec.shape)}; "
+            f"target config '{target_name}' and the manifest give {list(tensor.shape)}"
+        )
 
 
 def _annotate(image: np.ndarray, detections: list[dict], class_names: list[str]) -> np.ndarray:
