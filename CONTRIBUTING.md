@@ -43,3 +43,9 @@ The tests use the cpu target. To test another target, fetch it and set
 `DEPLOY_ULTRALYTICS_TARGET` to its name, as the CI job for that target does.
 
 CI fails when any test is skipped.
+
+CI also runs the lint hooks: file hygiene, and ruff for lint and format. Run them before you push:
+
+```sh
+uvx pre-commit run --all-files
+```
