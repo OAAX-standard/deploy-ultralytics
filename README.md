@@ -128,10 +128,16 @@ does not report it, so `detect` reads the input from the converted model, which 
 Requires Python 3.10 or newer.
 
 ```sh
-pip install .
-# or
 uv sync
+# or
+pip install --extra-index-url https://download.pytorch.org/whl/cpu .
 ```
+
+Nothing here runs torch on a GPU: `export` runs on the CPU, and inference goes through the OAAX
+runtimes. `pyproject.toml` therefore takes `torch` and `torchvision` from the PyTorch CPU index,
+which spares the install several GB of CUDA wheels. `uv sync` applies that setting. `pip` does not,
+so give it the index with `--extra-index-url`. Without it, `pip` installs the CUDA build of torch
+from PyPI.
 
 The C++ example this repository started from was dropped; see
 [ADR-0001](docs/adr/0001-python-over-legacy-cpp.md).
