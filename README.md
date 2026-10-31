@@ -154,5 +154,11 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-Apache License 2.0 — see [LICENSE](LICENSE). Ultralytics is called as a dependency only; none of
-its code is copied here.
+Apache License 2.0 — see [LICENSE](LICENSE).
+
+The `ultralytics` package is a dependency under
+[AGPL-3.0](https://github.com/ultralytics/ultralytics/blob/main/LICENSE). This repository calls it
+from `export` and from the reference-detections script, and copies none of its code. Ultralytics
+reads the AGPL as covering software that imports the package. Read the
+[Ultralytics licensing page](https://www.ultralytics.com/license) before you use `export` in a
+product that is not open source. The OAAX runtimes and `detect` do not use `ultralytics`.
