@@ -7,10 +7,13 @@ for project-wide conventions (commit message format, code style, etc.).
 ## How to contribute
 
 1. **Open an issue** to discuss the bug or feature before writing code.
-2. **Create a branch** from `main`.
+2. **Fork the repository** and create a branch in your fork from `main`.
 3. **Make your changes**, keeping each PR focused on one thing.
 4. **Run the tests** locally (see below) to confirm nothing is broken.
-5. **Push your branch** and open a pull request.
+5. **Push your branch** to your fork and open a pull request against `main`.
+
+CI runs on each pull request. On your first pull request, CI starts only after a maintainer
+approves the run.
 
 Sign off every commit (`git commit -s`): the Developer Certificate of Origin is required.
 
