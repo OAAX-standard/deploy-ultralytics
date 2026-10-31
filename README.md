@@ -128,10 +128,16 @@ does not report it, so `detect` reads the input from the converted model, which 
 Requires Python 3.10 or newer.
 
 ```sh
-pip install .
-# or
 uv sync
+# or
+pip install --extra-index-url https://download.pytorch.org/whl/cpu .
 ```
+
+Nothing here runs torch on a GPU: `export` runs on the CPU, and inference goes through the OAAX
+runtimes. `pyproject.toml` therefore takes `torch` and `torchvision` from the PyTorch CPU index,
+which spares the install several GB of CUDA wheels. `uv sync` applies that setting. `pip` does not,
+so give it the index with `--extra-index-url`. Without it, `pip` installs the CUDA build of torch
+from PyPI.
 
 The C++ example this repository started from was dropped; see
 [ADR-0001](docs/adr/0001-python-over-legacy-cpp.md).
@@ -148,5 +154,11 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-Apache License 2.0 — see [LICENSE](LICENSE). Ultralytics is called as a dependency only; none of
-its code is copied here.
+Apache License 2.0 — see [LICENSE](LICENSE).
+
+The `ultralytics` package is a dependency under
+[AGPL-3.0](https://github.com/ultralytics/ultralytics/blob/main/LICENSE). This repository calls it
+from `export` and from the reference-detections script, and copies none of its code. Ultralytics
+reads the AGPL as covering software that imports the package. Read the
+[Ultralytics licensing page](https://www.ultralytics.com/license) before you use `export` in a
+product that is not open source. The OAAX runtimes and `detect` do not use `ultralytics`.
