@@ -7,8 +7,7 @@ Run an Ultralytics YOLO detection model on several AI accelerators through
 only the conversion step differs.
 
 > Status: on every push, CI runs the Walkthrough and the test suite of the CPU and Intel targets.
-> `detect`'s check of the runtime's reported input is pending, so no target is verified yet; see
-> [Targets](#targets).
+> Both targets are verified; see [Targets](#targets).
 
 ## Walkthrough
 
@@ -100,6 +99,13 @@ host. It writes two files into the output directory (default: the current direct
   the pixels of the original image, in the same format as the
   [reference detections](fixtures/README.md).
 
+Before inference, `detect` checks the model input against the tensor that it makes from the target
+config and the model manifest. It compares the element type and the shape. If they differ, `detect`
+stops with a message that names the difference. `detect` gets the model input from the runtime when
+the runtime reports it. Otherwise it reads the input from the converted model, if that model is an
+ONNX file. If neither source gives the input, `detect` prints `input check skipped` and runs without
+the check.
+
 The model manifest is read from next to the model (`yolov8n.cpu.onnx` -> `yolov8n.cpu.manifest.json`). The
 runtime comes from `--runtime`, or from the `DEPLOY_ULTRALYTICS_RUNTIME` environment
 variable when the option is absent. Tests that need a runtime are skipped, with a message, when
@@ -109,15 +115,13 @@ the variable is not set.
 
 | Target | Status  |
 | ------ | ------- |
-| [CPU](src/deploy_ultralytics/targets/cpu/README.md#walkthrough) | export -> convert -> detect runs in CI; detect's input check is pending (see below) |
-| [Intel](src/deploy_ultralytics/targets/intel/README.md#walkthrough) | export -> convert -> detect runs in CI; detect's input check is pending (see below) |
+| [CPU](src/deploy_ultralytics/targets/cpu/README.md#walkthrough) | export -> convert -> detect verified in CI |
+| [Intel](src/deploy_ultralytics/targets/intel/README.md#walkthrough) | export -> convert -> detect verified in CI |
 | NVIDIA | pending |
 | DeepX  | pending |
 
-`detect` does not yet check the runtime's reported input shape and element type against the
-manifest and the target config. `oaax` 0.1.1 reads that information from a `models` entry of the
-runtime's info JSON, and no OAAX 2.0 runtime emits that entry. Until upstream fixes this, CPU and
-Intel stay unverified.
+The Intel runtime reports the model input, and `detect` checks against that report. The CPU runtime
+does not report it, so `detect` reads the input from the converted model, which is an ONNX file.
 
 ## Install
 
